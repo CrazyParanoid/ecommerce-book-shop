@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: payment-service
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/payment_db?useUnicode=yes&characterEncoding=UTF-8&serverTimezone=Europe/Moscow}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Password123!}
+  jpa:
+    hibernate.ddl-auto: validate
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    discovery:
+      enabled: false
+    stream:
+      kafka:
+        binder:
+          brokers: ${SERVICE_KAFKA_HOST:localhost:9092}
+      bindings:
+        paymentChannel:
+          binder: kafka
+          destination: ${PAYMENT_EVENTS_TOPIC:paymentEventsTopic}
+          contentType: application/json
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8080/auth/realms/car_park/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8080/auth/realms/car_park}
+
+events:
+  delay: 4000
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    preferIpAddress: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    metrics:
+      enabled: true
+    health:
+      show-details: always
+
+stripe:
+  secret:
+    key: sk_test_51JKkdAIGl2xprKWfXaZx3cUGDeKlr90haCNqvX6UXu4ink2ZLfoBiBKgPIbMVxZPlcAlhq5d3g26sX59OelPT27d00RuT563b5
+
+server:
+  port: 8084

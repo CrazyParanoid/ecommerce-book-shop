@@ -1,0 +1,16 @@
+{
+  "id" : "331b05c3-23e5-4297-a463-d0ebfc9a4920",
+  "picture_link" : "testLink",
+  "price" : 6000.000000,
+  "name" : "The Art of Computer Programming",
+  "author" : "Donald Knuth",
+  "quantity" : 7,
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost/api/v1/products/331b05c3-23e5-4297-a463-d0ebfc9a4920"
+    },
+    "product" : {
+      "href" : "http://localhost/api/v1/products/331b05c3-23e5-4297-a463-d0ebfc9a4920"
+    }
+  }
+}

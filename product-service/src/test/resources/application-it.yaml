@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      database: product_db
+      uri: mongodb://localhost/product_db
+    rest:
+      base-path: /api/v1
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8081/auth/realms/car_park/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8081/auth/realms/car_park}

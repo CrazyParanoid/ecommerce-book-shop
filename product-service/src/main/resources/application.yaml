@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      database: product_db
+      uri: mongodb://localhost/product_db
+    rest:
+      base-path: /api/v1
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8080/auth/realms/car_park/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8080/auth/realms/car_park}
+  cloud:
+    discovery:
+      enabled: false
+    stream:
+      kafka:
+        binder:
+          brokers: ${SERVICE_KAFKA_HOST:localhost:9092}
+      bindings:
+        orderChannel:
+          destination: ${ORDER_EVENTS_TOPIC:orderEventsTopic}
+          contentType: application/json
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    preferIpAddress: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    metrics:
+      enabled: true
+    health:
+      show-details: always
+server:
+  port: 8087
