@@ -8,11 +8,14 @@ spring:
       kafka:
         binder:
           brokers: ${SERVICE_KAFKA_HOST:localhost:9092}
+          autoCreateTopics: false
       bindings:
         paymentChannel:
+          binder: kafka
           destination: ${PAYMENT_EVENTS_TOPIC:paymentEventsTopic}
           contentType: application/json
         clientChannel:
+          binder: kafka
           destination: ${CLIENT_EVENTS_TOPIC:clientEventsTopic}
           contentType: application/json
         orderChannel:
@@ -32,8 +35,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8080/auth/realms/car_park/protocol/openid-connect/certs}
-          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8080/auth/realms/car_park}
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8080/auth/realms/test/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8080/auth/realms/test}
 events:
   delay: 4000
 
@@ -54,5 +57,3 @@ management:
       enabled: true
     health:
       show-details: always
-server:
-  port: 8082
