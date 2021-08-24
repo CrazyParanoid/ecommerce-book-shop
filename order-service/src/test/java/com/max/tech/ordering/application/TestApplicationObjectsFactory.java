@@ -2,24 +2,42 @@ package com.max.tech.ordering.application;
 
 import com.max.tech.ordering.application.client.dto.AddressDTO;
 import com.max.tech.ordering.application.client.dto.ClientDTO;
-import com.max.tech.ordering.util.TestValues;
 import com.max.tech.ordering.application.client.dto.RegisterNewClientCommand;
 import com.max.tech.ordering.application.order.dto.*;
 import com.max.tech.ordering.domain.Order;
+import com.max.tech.ordering.util.TestValues;
 import lombok.experimental.UtilityClass;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 @UtilityClass
 public class TestApplicationObjectsFactory {
 
-    public AddProductToOrderCommand newAddProductToOrderCommand() {
-        return new AddProductToOrderCommand(
+    public CreateNewOrderCommand newCreateNewOrderCommand() {
+        return new CreateNewOrderCommand(
+                TestValues.CLIENT_ID,
+                Collections.singletonList(
+                        new ProductDTO(
+                                TestValues.FIRST_PRODUCT_ID,
+                                TestValues.FIRST_PRODUCT_PRICE,
+                                TestValues.FIRST_PRODUCT_QUANTITY
+                        )
+                )
+        );
+    }
+
+    public AddProductsToOrderCommand newAddProductToOrderCommand() {
+        return new AddProductsToOrderCommand(
                 TestValues.ORDER_ID,
-                TestValues.FIRST_PRODUCT_ID,
-                TestValues.FIRST_PRODUCT_PRICE,
-                TestValues.FIRST_PRODUCT_QUANTITY
+                Collections.singletonList(
+                        new ProductDTO(
+                                TestValues.FIRST_PRODUCT_ID,
+                                TestValues.FIRST_PRODUCT_PRICE,
+                                TestValues.FIRST_PRODUCT_QUANTITY
+                        )
+                )
         );
     }
 

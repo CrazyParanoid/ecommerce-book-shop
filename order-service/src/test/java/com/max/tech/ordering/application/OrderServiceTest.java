@@ -52,23 +52,11 @@ public class OrderServiceTest {
         Mockito.when(clientRepository.findClientById(ArgumentMatchers.any(ClientId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newClient()));
 
-        var orderDTO = orderService.createNewOrder(TestValues.CLIENT_ID);
-
-        AssertionUtil.assertNewOrderDTO(orderDTO);
-    }
-
-    @Test
-    public void test_try_to_create_new_order_if_order_already_exists() {
-        Mockito.doNothing().when(orderRepository).save(ArgumentMatchers.any(Order.class));
-        Mockito.doNothing().when(domainEventPublisher).publish(ArgumentMatchers.anyList());
-        Mockito.when(orderRepository.findPendingProductsOrdersForClient(ArgumentMatchers.any(ClientId.class)))
-                .thenReturn(Collections.singletonList(TestDomainObjectsFactory.newOrder()));
-
-        Assertions.assertThrows(
-                IllegalStateException.class,
-                () -> orderService.createNewOrder(TestValues.CLIENT_ID),
-                "Order for client d4e30469-60c2-4ea2-a01b-35ea9b13d07c already exists"
+        var orderDTO = orderService.createNewOrder(
+                TestApplicationObjectsFactory.newCreateNewOrderCommand()
         );
+
+        AssertionUtil.assertOrderDTO(orderDTO);
     }
 
     @Test
@@ -78,7 +66,7 @@ public class OrderServiceTest {
         Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
-        orderService.addProductToOrder(TestApplicationObjectsFactory.newAddProductToOrderCommand());
+        orderService.addProductsToOrder(TestApplicationObjectsFactory.newAddProductToOrderCommand());
 
         Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any(Order.class));
         Mockito.verify(domainEventPublisher, Mockito.times(1)).publish(ArgumentMatchers.anyList());

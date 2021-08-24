@@ -5,7 +5,7 @@ import com.max.tech.ordering.Application;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
 import com.max.tech.ordering.infrastructure.events.publisher.OutputBindings;
-import com.max.tech.ordering.infrastructure.persistence.TransactionTemplateConfig;
+import com.max.tech.ordering.config.TransactionTemplateConfig;
 import com.max.tech.ordering.util.TestValues;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;

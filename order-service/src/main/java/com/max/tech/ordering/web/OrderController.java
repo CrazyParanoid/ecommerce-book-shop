@@ -1,7 +1,8 @@
 package com.max.tech.ordering.web;
 
 import com.max.tech.ordering.application.order.OrderService;
-import com.max.tech.ordering.application.order.dto.AddProductToOrderCommand;
+import com.max.tech.ordering.application.order.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.order.dto.CreateNewOrderCommand;
 import com.max.tech.ordering.application.order.dto.OrderDTO;
 import com.max.tech.ordering.application.order.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.web.security.User;
@@ -30,8 +31,9 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(value = "Create new order")
-    public OrderDTO createNewOrder() {
-        var oderDTO = orderService.createNewOrder(extractClientId());
+    public OrderDTO createNewOrder(@RequestBody @Valid CreateNewOrderCommand command) {
+        command.setClientId(extractClientId());
+        var oderDTO = orderService.createNewOrder(command);
         HypermediaUtil.addLinks(oderDTO);
         return oderDTO;
     }
@@ -53,11 +55,11 @@ public class OrderController {
     }
 
     @PutMapping(value = "/{orderId}/products")
-    @ApiOperation(value = "Add product to order")
+    @ApiOperation(value = "Add products to order")
     public ResponseEntity<Void> addProductToOrder(@PathVariable String orderId,
-                                                  @RequestBody @Valid AddProductToOrderCommand command) {
+                                                  @RequestBody @Valid AddProductsToOrderCommand command) {
         command.setOrderId(orderId);
-        orderService.addProductToOrder(command);
+        orderService.addProductsToOrder(command);
         return ResponseEntity.noContent().build();
     }
 

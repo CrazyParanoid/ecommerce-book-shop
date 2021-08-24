@@ -1,4 +1,4 @@
-package com.max.tech.ordering.infrastructure.persistence;
+package com.max.tech.ordering.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

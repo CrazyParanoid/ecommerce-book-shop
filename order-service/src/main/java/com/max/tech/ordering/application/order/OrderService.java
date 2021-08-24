@@ -1,6 +1,7 @@
 package com.max.tech.ordering.application.order;
 
-import com.max.tech.ordering.application.order.dto.AddProductToOrderCommand;
+import com.max.tech.ordering.application.order.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.order.dto.CreateNewOrderCommand;
 import com.max.tech.ordering.application.order.dto.OrderDTO;
 import com.max.tech.ordering.application.order.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.domain.Amount;
@@ -40,44 +41,63 @@ public class OrderService {
         this.clientRepository = clientRepository;
     }
 
+    /**
+     * Create a new order with products, if they have been selected.
+     *
+     * @param command request to create an order
+     * @return created order
+     */
     @Transactional(isolation = Isolation.SERIALIZABLE)
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
-    public OrderDTO createNewOrder(String aClientId) {
-        var existedOrders = orderRepository.findPendingProductsOrdersForClient(ClientId.fromValue(aClientId));
-        if (!existedOrders.isEmpty())
-            throw new IllegalStateException(String.format("Order for client %s already exists", aClientId));
-
-        var clientId = ClientId.fromValue(aClientId);
+    public OrderDTO createNewOrder(CreateNewOrderCommand command) {
+        var clientId = ClientId.fromValue(command.getClientId());
         var client = clientRepository.findClientById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(String.format("Client with id %s is not found", clientId)));
 
-        var newOrder = Order.newOrder(clientId, client.getAddress());
-        domainEventPublisher.publish(newOrder.getDomainEvents());
+        var order = Order.newOrder(clientId, client.getAddress());
+        command.getProducts().forEach(
+                product -> order.addProduct(
+                        ProductId.fromValue(product.getProductId()),
+                        Amount.fromValue(product.getPrice()),
+                        product.getQuantity()
+                )
+        );
 
-        orderRepository.save(newOrder);
-        log.info("Order with id {} has been created", newOrder.getOrderId().toString());
-        return orderAssembler.writeDTO(newOrder);
+        domainEventPublisher.publish(order.getDomainEvents());
+
+        orderRepository.save(order);
+        log.info("Order with id {} has been created", order.getOrderId().toString());
+        return orderAssembler.writeDTO(order);
     }
 
+    /**
+     * Add selected products to order.
+     *
+     * @param command request to add selected products to order.
+     */
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
-    public void addProductToOrder(AddProductToOrderCommand command) {
+    public void addProductsToOrder(AddProductsToOrderCommand command) {
         var order = orderRepository.findOrderById(OrderId.fromValue(command.getOrderId()))
                 .orElseThrow(() -> new OrderNotFoundException(
                         String.format("Order with id %s is not found", command.getOrderId())));
 
-        order.addProduct(
-                ProductId.fromValue(command.getProductId()),
-                Amount.fromValue(command.getPrice()),
-                command.getQuantity()
+        command.getProducts().forEach(
+                product -> {
+                    order.addProduct(
+                            ProductId.fromValue(product.getProductId()),
+                            Amount.fromValue(product.getPrice()),
+                            product.getQuantity()
+                    );
+
+                    log.info("Product with id {} has been added to order, id {}",
+                            product.getProductId(),
+                            command.getOrderId());
+                }
         );
 
         domainEventPublisher.publish(order.getDomainEvents());
         orderRepository.save(order);
-
-        log.info("Product with id {} has been added to order, id {}",
-                command.getProductId(),
-                command.getOrderId());
     }
 
     @Transactional

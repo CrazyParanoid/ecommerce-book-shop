@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.application.TestApplicationObjectsFactory;
 import com.max.tech.ordering.application.order.OrderNotFoundException;
 import com.max.tech.ordering.application.order.OrderService;
-import com.max.tech.ordering.application.order.dto.AddProductToOrderCommand;
+import com.max.tech.ordering.application.order.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.order.dto.CreateNewOrderCommand;
 import com.max.tech.ordering.application.order.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
 import com.max.tech.ordering.util.TestValues;
@@ -44,14 +45,14 @@ public class OrderControllerAPITest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    public void setUp(){
+    public void setUp() {
         WebUtil.mockSecurity();
     }
 
     @Test
     @SneakyThrows
     public void test_post_new_order() {
-        Mockito.when(orderService.createNewOrder(ArgumentMatchers.anyString()))
+        Mockito.when(orderService.createNewOrder(ArgumentMatchers.any(CreateNewOrderCommand.class)))
                 .thenReturn(TestApplicationObjectsFactory.newOrderDTO());
 
         var actualResponse = postNewOrder();
@@ -68,6 +69,9 @@ public class OrderControllerAPITest {
                 )
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
                         .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(
+                                TestApplicationObjectsFactory.newCreateNewOrderCommand()
+                        ))
         ).andExpect(MockMvcResultMatchers.status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -76,7 +80,7 @@ public class OrderControllerAPITest {
 
     @Test
     public void test_put_new_product() {
-        Mockito.doNothing().when(orderService).addProductToOrder(ArgumentMatchers.any(AddProductToOrderCommand.class));
+        Mockito.doNothing().when(orderService).addProductsToOrder(ArgumentMatchers.any(AddProductsToOrderCommand.class));
 
         var actualResponse = putNewProduct();
 

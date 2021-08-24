@@ -2,6 +2,7 @@ package com.max.tech.ordering.e2e;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.Application;
+import com.max.tech.ordering.application.TestApplicationObjectsFactory;
 import com.max.tech.ordering.application.order.dto.OrderDTO;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
@@ -58,7 +59,7 @@ public class E2EOrderAPITest {
         var response = postNewOrder();
 
         var order = objectMapper.readValue(response, OrderDTO.class);
-        AssertionUtil.assertNewOrderDTO(order);
+        AssertionUtil.assertOrderDTO(order);
     }
 
     @SneakyThrows
@@ -69,6 +70,9 @@ public class E2EOrderAPITest {
                 )
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
                         .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                TestApplicationObjectsFactory.newCreateNewOrderCommand())
+                        )
         ).andExpect(MockMvcResultMatchers.status().isCreated())
                 .andReturn()
                 .getResponse()

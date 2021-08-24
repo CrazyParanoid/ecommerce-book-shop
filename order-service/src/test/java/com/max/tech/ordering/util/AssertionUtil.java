@@ -6,8 +6,6 @@ import com.max.tech.ordering.domain.Order;
 import lombok.experimental.UtilityClass;
 import org.junit.jupiter.api.Assertions;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -27,16 +25,26 @@ public class AssertionUtil {
         Assertions.assertEquals(address.getEntrance(), TestValues.ENTRANCE);
     }
 
-    public void assertNewOrderDTO(OrderDTO orderDTO) {
+    public void assertOrderDTO(OrderDTO orderDTO) {
         Assertions.assertNotNull(orderDTO.getOrderId());
         Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
         Assertions.assertNull(orderDTO.getDeliveredAt());
         Assertions.assertEquals(orderDTO.getStatus(), Order.Status.PENDING_FOR_PRODUCTS.name());
         Assertions.assertNull(orderDTO.getCourierId());
-        Assertions.assertEquals(orderDTO.getTotalPrice(), BigDecimal.ZERO.setScale(6, RoundingMode.UP));
-        Assertions.assertTrue(orderDTO.getProducts().isEmpty());
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_PRODUCT);
+        Assertions.assertFalse(orderDTO.getProducts().isEmpty());
         Assertions.assertEquals(orderDTO.getDeliveryAddress(), TestValues.FULlL_ADDRESS);
         Assertions.assertNull(orderDTO.getPaymentId());
+
+        var product = orderDTO.getProducts()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        Assertions.assertNotNull(product);
+        Assertions.assertEquals(product.getProductId(), TestValues.FIRST_PRODUCT_ID);
+        Assertions.assertEquals(product.getPrice(), TestValues.FIRST_PRODUCT_PRICE);
+        Assertions.assertEquals(product.getQuantity(), TestValues.FIRST_PRODUCT_QUANTITY);
     }
 
 }

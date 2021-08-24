@@ -66,6 +66,15 @@ public class Order extends AggregateRoot {
         this.deliveryAddress = address;
     }
 
+    /**
+     * Add selected product to order. If a product with this ID already exists, it will be updated.
+     * The total cost of the order will be recalculated.
+     * The discount will also be calculated according to the domain rules.
+     *
+     * @param productId selected product ID
+     * @param price selected product price
+     * @param quantity selected product quantity
+     */
     public void addProduct(ProductId productId, Amount price, Integer quantity) {
         if (this.status != Status.PENDING_FOR_PRODUCTS)
             throw new IllegalStateException("Wrong invocation for current state");
