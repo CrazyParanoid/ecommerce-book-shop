@@ -33,7 +33,7 @@ public class OrderTest {
         Assertions.assertNull(order.getCourierId());
         Assertions.assertNull(order.getDeliveredAt());
         Assertions.assertTrue(products.isEmpty());
-        Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_FOR_PRODUCTS);
+        Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_PAYMENT);
         Assertions.assertNotNull(order.getOrderId());
         Assertions.assertEquals(order.getClientId().toString(), TestValues.CLIENT_ID);
         Assertions.assertEquals(order.getTotalPrice(), Amount.ZERO_AMOUNT);

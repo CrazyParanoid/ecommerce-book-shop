@@ -29,7 +29,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public List<Order> findPendingProductsOrdersForClient(ClientId clientId) {
-        return orderJPARepository.findOrderByClientIdAndStatus(clientId, Order.Status.PENDING_FOR_PRODUCTS);
+        return orderJPARepository.findOrderByClientIdAndStatus(clientId, Order.Status.PENDING_PAYMENT);
     }
 
 }

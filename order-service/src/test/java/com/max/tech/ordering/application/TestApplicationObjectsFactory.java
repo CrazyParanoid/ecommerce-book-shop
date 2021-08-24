@@ -68,7 +68,7 @@ public class TestApplicationObjectsFactory {
     public OrderDTO newOrderDTO() {
         return new OrderDTO(
                 TestValues.ORDER_ID,
-                Order.Status.PENDING_FOR_PRODUCTS.name(),
+                Order.Status.PENDING_PAYMENT.name(),
                 TestValues.CLIENT_ID,
                 TestValues.EMPLOYEE_ID,
                 null,

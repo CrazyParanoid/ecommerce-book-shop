@@ -43,7 +43,7 @@ public class Order extends AggregateRoot {
     private Amount totalPrice = Amount.ZERO_AMOUNT;
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "TEXT")
-    private Status status = Status.PENDING_FOR_PRODUCTS;
+    private Status status = Status.PENDING_PAYMENT;
     @OneToMany(
             targetEntity = Product.class,
             mappedBy = "order",
@@ -76,7 +76,7 @@ public class Order extends AggregateRoot {
      * @param quantity selected product quantity
      */
     public void addProduct(ProductId productId, Amount price, Integer quantity) {
-        if (this.status != Status.PENDING_FOR_PRODUCTS)
+        if (this.status != Status.PENDING_PAYMENT)
             throw new IllegalStateException("Wrong invocation for current state");
 
         this.products.stream()
@@ -125,7 +125,7 @@ public class Order extends AggregateRoot {
     }
 
     public void removeProduct(ProductId productId) {
-        if (this.status != Status.PENDING_FOR_PRODUCTS)
+        if (this.status != Status.PENDING_PAYMENT)
             throw new IllegalStateException("Wrong invocation for current state");
         if (this.products.isEmpty())
             throw new IllegalStateException("Order products can't be empty");
@@ -151,7 +151,7 @@ public class Order extends AggregateRoot {
     }
 
     public void clearProducts() {
-        if (this.status != Status.PENDING_FOR_PRODUCTS)
+        if (this.status != Status.PENDING_PAYMENT)
             throw new IllegalStateException("Wrong invocation for current state");
 
         this.products.clear();
@@ -159,7 +159,7 @@ public class Order extends AggregateRoot {
     }
 
     public void confirmPayment(PaymentId paymentId) {
-        if (this.status != Status.PENDING_FOR_PRODUCTS)
+        if (this.status != Status.PENDING_PAYMENT)
             throw new IllegalStateException("Wrong invocation for current state");
         if (this.products.isEmpty())
             throw new IllegalStateException("Order products can't be empty");
@@ -236,7 +236,7 @@ public class Order extends AggregateRoot {
     }
 
     public enum Status {
-        PENDING_FOR_PRODUCTS,
+        PENDING_PAYMENT,
         PENDING_DELIVERY_SERVICE,
         PENDING_FOR_DELIVERING,
         DELIVERED

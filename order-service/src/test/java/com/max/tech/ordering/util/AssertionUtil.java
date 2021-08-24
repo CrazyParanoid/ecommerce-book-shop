@@ -29,7 +29,7 @@ public class AssertionUtil {
         Assertions.assertNotNull(orderDTO.getOrderId());
         Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
         Assertions.assertNull(orderDTO.getDeliveredAt());
-        Assertions.assertEquals(orderDTO.getStatus(), Order.Status.PENDING_FOR_PRODUCTS.name());
+        Assertions.assertEquals(orderDTO.getStatus(), Order.Status.PENDING_PAYMENT.name());
         Assertions.assertNull(orderDTO.getCourierId());
         Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_PRODUCT);
         Assertions.assertFalse(orderDTO.getProducts().isEmpty());
