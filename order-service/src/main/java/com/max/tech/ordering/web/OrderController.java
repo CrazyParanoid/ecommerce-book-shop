@@ -1,9 +1,8 @@
 package com.max.tech.ordering.web;
 
 import com.max.tech.ordering.application.OrderService;
-import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
-import com.max.tech.ordering.application.dto.PlaceOrderCommand;
 import com.max.tech.ordering.application.dto.OrderDTO;
+import com.max.tech.ordering.application.dto.PlaceOrderCommand;
 import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.web.security.User;
 import io.swagger.annotations.ApiOperation;
@@ -58,15 +57,6 @@ public class OrderController {
     @ApiOperation(value = "Confirm order payment")
     public ResponseEntity<Void> confirmPayment(@PathVariable String orderId, @PathVariable String paymentId){
         orderService.confirmOrderPayment(orderId, paymentId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping(value = "/{orderId}/products")
-    @ApiOperation(value = "Add products to order")
-    public ResponseEntity<Void> addProductToOrder(@PathVariable String orderId,
-                                                  @RequestBody @Valid AddProductsToOrderCommand command) {
-        command.setOrderId(orderId);
-        orderService.addProductsToOrder(command);
         return ResponseEntity.noContent().build();
     }
 

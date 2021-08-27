@@ -1,6 +1,5 @@
 package com.max.tech.ordering.web;
 
-import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
 import com.max.tech.ordering.application.dto.OrderDTO;
 import lombok.experimental.UtilityClass;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
@@ -12,7 +11,6 @@ public class HypermediaUtil {
 
     public void addLinks(OrderDTO orderDTO) {
         addSelfLink(orderDTO);
-        addPutProductLink(orderDTO);
         addPutPaymentLink(orderDTO);
         addDeleteProductLink(orderDTO);
         addDeleteProductsFromOrderLink(orderDTO);
@@ -27,14 +25,6 @@ public class HypermediaUtil {
                         WebMvcLinkBuilder.methodOn(OrderController.class)
                                 .findOrderById(orderDTO.getOrderId()))
                         .withSelfRel());
-    }
-
-    private void addPutProductLink(OrderDTO orderDTO) {
-        orderDTO.add(
-                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .addProductToOrder(orderDTO.getOrderId(), new AddProductsToOrderCommand()))
-                        .withRel("put-product")
-        );
     }
 
     private void addPutPaymentLink(OrderDTO orderDTO) {

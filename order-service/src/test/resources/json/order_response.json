@@ -16,9 +16,6 @@
     "self": {
       "href": "http://localhost/api/v1/orders/7fff2f52-4efc-4a40-b2ec-64145e9794a3"
     },
-    "put-product": {
-      "href": "http://localhost/api/v1/orders/7fff2f52-4efc-4a40-b2ec-64145e9794a3/products"
-    },
     "put-payment": {
       "href": "http://localhost/api/v1/orders/7fff2f52-4efc-4a40-b2ec-64145e9794a3/payment/payment_id"
     },

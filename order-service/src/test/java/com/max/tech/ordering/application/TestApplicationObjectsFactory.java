@@ -25,19 +25,6 @@ public class TestApplicationObjectsFactory {
         );
     }
 
-    public AddProductsToOrderCommand newAddProductToOrderCommand() {
-        return new AddProductsToOrderCommand(
-                TestValues.ORDER_ID,
-                Collections.singletonList(
-                        new ProductDTO(
-                                TestValues.FIRST_PRODUCT_ID,
-                                TestValues.FIRST_PRODUCT_PRICE,
-                                TestValues.FIRST_PRODUCT_QUANTITY
-                        )
-                )
-        );
-    }
-
     public TakeOrderToDeliveryCommand newTakeOrderToDeliveryCommand() {
         return new TakeOrderToDeliveryCommand(
                 TestValues.ORDER_ID,

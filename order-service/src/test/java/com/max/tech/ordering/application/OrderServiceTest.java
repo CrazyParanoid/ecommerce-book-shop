@@ -53,21 +53,6 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void test_add_product_to_order() {
-        Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
-                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrder()));
-        Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
-        Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
-
-        orderService.addProductsToOrder(TestApplicationObjectsFactory.newAddProductToOrderCommand());
-
-        Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any(Order.class));
-        Mockito.verify(domainEventPublisher, Mockito.times(1)).publish(ArgumentMatchers.anyList());
-        Assertions.assertNotNull(orderCaptor.getValue());
-        Assertions.assertFalse(domainEventsCaptor.getValue().isEmpty());
-    }
-
-    @Test
     public void test_remove_product_from_order() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneProduct()));

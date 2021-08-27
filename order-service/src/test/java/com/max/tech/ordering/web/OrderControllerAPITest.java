@@ -1,10 +1,9 @@
 package com.max.tech.ordering.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.max.tech.ordering.application.TestApplicationObjectsFactory;
 import com.max.tech.ordering.application.OrderNotFoundException;
 import com.max.tech.ordering.application.OrderService;
-import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.TestApplicationObjectsFactory;
 import com.max.tech.ordering.application.dto.PlaceOrderCommand;
 import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
@@ -73,34 +72,6 @@ public class OrderControllerAPITest {
                                 TestApplicationObjectsFactory.newPlaceOrderCommand()
                         ))
         ).andExpect(MockMvcResultMatchers.status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-    }
-
-    @Test
-    public void test_put_new_product() {
-        Mockito.doNothing().when(orderService).addProductsToOrder(ArgumentMatchers.any(AddProductsToOrderCommand.class));
-
-        var actualResponse = putNewProduct();
-
-        Assertions.assertTrue(actualResponse.isBlank());
-    }
-
-    @SneakyThrows
-    private String putNewProduct() {
-        return mockMvc.perform(
-                MockMvcRequestBuilders.put(
-                        "/api/v1/orders/{id}/products", TestValues.ORDER_ID
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-                        .content(
-                                objectMapper.writeValueAsString(
-                                        TestApplicationObjectsFactory.newAddProductToOrderCommand()
-                                )
-                        )
-        ).andExpect(MockMvcResultMatchers.status().isNoContent())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

@@ -1,19 +1,17 @@
 package com.max.tech.ordering.application;
 
-import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
-import com.max.tech.ordering.application.dto.PlaceOrderCommand;
 import com.max.tech.ordering.application.dto.OrderDTO;
+import com.max.tech.ordering.application.dto.PlaceOrderCommand;
 import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.domain.*;
-import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
 import com.max.tech.ordering.domain.payment.PaymentId;
+import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.product.ProductId;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -35,12 +33,12 @@ public class OrderService {
     }
 
     /**
-     * Create a new order with products, if they have been selected.
+     * Place order with products, if they have been selected.
      *
-     * @param command request to create an order
+     * @param command request to place an order
      * @return created order
      */
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
     public OrderDTO placeOrder(PlaceOrderCommand command) {
         var order = Order.place(
@@ -60,36 +58,6 @@ public class OrderService {
         orderRepository.save(order);
         log.info("Order with id {} has been created", order.getOrderId().toString());
         return orderAssembler.writeDTO(order);
-    }
-
-    /**
-     * Add selected products to order.
-     *
-     * @param command request to add selected products to order.
-     */
-    @Transactional
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
-    public void addProductsToOrder(AddProductsToOrderCommand command) {
-        var order = orderRepository.findOrderById(OrderId.fromValue(command.getOrderId()))
-                .orElseThrow(() -> new OrderNotFoundException(
-                        String.format("Order with id %s is not found", command.getOrderId())));
-
-        command.getProducts().forEach(
-                product -> {
-                    order.addProduct(
-                            ProductId.fromValue(product.getProductId()),
-                            Amount.fromValue(product.getPrice()),
-                            product.getQuantity()
-                    );
-
-                    log.info("Product with id {} has been added to order, id {}",
-                            product.getProductId(),
-                            command.getOrderId());
-                }
-        );
-
-        domainEventPublisher.publish(order.getDomainEvents());
-        orderRepository.save(order);
     }
 
     @Transactional
