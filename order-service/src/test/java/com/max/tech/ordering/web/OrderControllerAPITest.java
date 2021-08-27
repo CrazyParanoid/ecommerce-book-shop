@@ -2,11 +2,11 @@ package com.max.tech.ordering.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.application.TestApplicationObjectsFactory;
-import com.max.tech.ordering.application.order.OrderNotFoundException;
-import com.max.tech.ordering.application.order.OrderService;
-import com.max.tech.ordering.application.order.dto.AddProductsToOrderCommand;
-import com.max.tech.ordering.application.order.dto.CreateNewOrderCommand;
-import com.max.tech.ordering.application.order.dto.TakeOrderToDeliveryCommand;
+import com.max.tech.ordering.application.OrderNotFoundException;
+import com.max.tech.ordering.application.OrderService;
+import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.dto.PlaceOrderCommand;
+import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
 import com.max.tech.ordering.util.TestValues;
 import com.max.tech.ordering.util.WebUtil;
@@ -52,13 +52,13 @@ public class OrderControllerAPITest {
     @Test
     @SneakyThrows
     public void test_post_new_order() {
-        Mockito.when(orderService.createNewOrder(ArgumentMatchers.any(CreateNewOrderCommand.class)))
+        Mockito.when(orderService.placeOrder(ArgumentMatchers.any(PlaceOrderCommand.class)))
                 .thenReturn(TestApplicationObjectsFactory.newOrderDTO());
 
         var actualResponse = postNewOrder();
 
-        var expectedResponse = WebUtil.getResponse("classpath:json/new_order_response.json");
-        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.LENIENT);
+        var expectedResponse = WebUtil.getResponse("classpath:json/order_response.json");
+        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.STRICT);
     }
 
     @SneakyThrows
@@ -70,7 +70,7 @@ public class OrderControllerAPITest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(
-                                TestApplicationObjectsFactory.newCreateNewOrderCommand()
+                                TestApplicationObjectsFactory.newPlaceOrderCommand()
                         ))
         ).andExpect(MockMvcResultMatchers.status().isCreated())
                 .andReturn()
@@ -212,12 +212,12 @@ public class OrderControllerAPITest {
     @SneakyThrows
     public void test_get_order_by_id() {
         Mockito.when(orderService.findOrderById(ArgumentMatchers.anyString()))
-                .thenReturn(TestApplicationObjectsFactory.newOrderDTOWithProducts());
+                .thenReturn(TestApplicationObjectsFactory.newOrderDTO());
 
         var actualResponse = getOrder(MockMvcResultMatchers.status().isOk());
 
-        var expectedResponse = WebUtil.getResponse("classpath:json/order_with_products_response.json");
-        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.LENIENT);
+        var expectedResponse = WebUtil.getResponse("classpath:json/order_response.json");
+        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.STRICT);
     }
 
     @SneakyThrows

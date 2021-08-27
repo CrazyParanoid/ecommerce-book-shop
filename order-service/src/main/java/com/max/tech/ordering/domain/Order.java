@@ -1,9 +1,8 @@
 package com.max.tech.ordering.domain;
 
-import com.max.tech.ordering.domain.client.ClientId;
 import com.max.tech.ordering.domain.common.AggregateRoot;
-import com.max.tech.ordering.domain.employee.EmployeeId;
 import com.max.tech.ordering.domain.payment.PaymentId;
+import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.product.Product;
 import com.max.tech.ordering.domain.product.ProductId;
 import lombok.AccessLevel;
@@ -33,11 +32,11 @@ public class Order extends AggregateRoot {
     @EmbeddedId
     private OrderId orderId;
     @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "delivery_address_id"))
+    private AddressId deliveryAddressId;
+    @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "client_id"))
-    private ClientId clientId;
-    @JoinColumn(name = "address_id")
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Address deliveryAddress;
+    private PersonId personId;
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "total_price"))
     private Amount totalPrice = Amount.ZERO_AMOUNT;
@@ -55,15 +54,15 @@ public class Order extends AggregateRoot {
     private LocalDateTime deliveredAt;
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "courier_id"))
-    private EmployeeId courierId;
+    private PersonId courierId;
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "payment_id", columnDefinition = "TEXT"))
     private PaymentId paymentId;
 
-    private Order(ClientId clientId, OrderId orderId, Address address) {
-        this.clientId = clientId;
+    private Order(PersonId personId, OrderId orderId, AddressId deliveryAddressId) {
+        this.personId = personId;
         this.orderId = orderId;
-        this.deliveryAddress = address;
+        this.deliveryAddressId = deliveryAddressId;
     }
 
     /**
@@ -72,8 +71,8 @@ public class Order extends AggregateRoot {
      * The discount will also be calculated according to the domain rules.
      *
      * @param productId selected product ID
-     * @param price selected product price
-     * @param quantity selected product quantity
+     * @param price     selected product price
+     * @param quantity  selected product quantity
      */
     public void addProduct(ProductId productId, Amount price, Integer quantity) {
         if (this.status != Status.PENDING_PAYMENT)
@@ -170,7 +169,7 @@ public class Order extends AggregateRoot {
         raiseDomainEvent(new OrderPaid(this.orderId, paymentId));
     }
 
-    public void takeInDelivery(EmployeeId courierId) {
+    public void takeInDelivery(PersonId courierId) {
         if (this.status != Status.PENDING_DELIVERY_SERVICE)
             throw new IllegalStateException("Wrong invocation for current state");
 
@@ -205,18 +204,16 @@ public class Order extends AggregateRoot {
                         productId.toString())));
     }
 
-    public static Order newOrder(ClientId clientId,
-                                 Address address) {
-        address.validate();
-
+    public static Order place(PersonId personId, AddressId deliveryAddressId) {
         var order = new Order(
-                clientId,
+                personId,
                 OrderId.newOrderId(),
-                address
+                deliveryAddressId
         );
-        order.raiseDomainEvent(new OrderCreated(order.orderId,
-                order.clientId,
-                order.deliveryAddress));
+        order.raiseDomainEvent(new OrderPlaced(
+                order.orderId,
+                order.personId,
+                order.deliveryAddressId));
 
         return order;
     }

@@ -1,8 +1,8 @@
 package com.max.tech.ordering.domain;
 
 import com.max.tech.ordering.domain.common.DomainEvent;
-import com.max.tech.ordering.domain.employee.EmployeeId;
 import com.max.tech.ordering.domain.payment.PaymentId;
+import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.product.Product;
 import com.max.tech.ordering.domain.product.ProductId;
 import com.max.tech.ordering.util.AssertionUtil;
@@ -18,12 +18,12 @@ import java.util.stream.Collectors;
 public class OrderTest {
 
     @Test
-    public void test_create_new_order() {
+    public void test_place_order() {
         var order = TestDomainObjectsFactory.newOrder();
-        var orderCreatedDomainEvent = getDomainEventByType(order, OrderCreated.class);
+        var orderPlacedDomainEvent = getDomainEventByType(order, OrderPlaced.class);
 
         assertNewOrder(order);
-        assertOrderCreatedDomainEvent(orderCreatedDomainEvent);
+        assertOrderPlacedDomainEvent(orderPlacedDomainEvent);
     }
 
     private void assertNewOrder(Order order) {
@@ -35,15 +35,15 @@ public class OrderTest {
         Assertions.assertTrue(products.isEmpty());
         Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_PAYMENT);
         Assertions.assertNotNull(order.getOrderId());
-        Assertions.assertEquals(order.getClientId().toString(), TestValues.CLIENT_ID);
+        Assertions.assertEquals(order.getPersonId().toString(), TestValues.CLIENT_ID);
         Assertions.assertEquals(order.getTotalPrice(), Amount.ZERO_AMOUNT);
-        AssertionUtil.assertAddress(order.getDeliveryAddress());
+        Assertions.assertEquals(order.getDeliveryAddressId().toString(), TestValues.ADDRESS_ID);
     }
 
-    private void assertOrderCreatedDomainEvent(OrderCreated domainEvent) {
+    private void assertOrderPlacedDomainEvent(OrderPlaced domainEvent) {
         Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertEquals(domainEvent.getClientId(), TestValues.CLIENT_ID);
-        AssertionUtil.assertAddress(domainEvent.getDeliveryAddress());
+        Assertions.assertEquals(domainEvent.getDeliveryAddressId(), TestValues.ADDRESS_ID);
     }
 
     @Test
@@ -259,7 +259,7 @@ public class OrderTest {
     public void test_take_order_in_delivery() {
         var order = TestDomainObjectsFactory.newPendingDeliveryServiceOrder();
 
-        order.takeInDelivery(EmployeeId.fromValue(TestValues.EMPLOYEE_ID));
+        order.takeInDelivery(PersonId.fromValue(TestValues.EMPLOYEE_ID));
         var domainEvent = getDomainEventByType(order, OrderTookInDelivery.class);
 
         Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_FOR_DELIVERING);

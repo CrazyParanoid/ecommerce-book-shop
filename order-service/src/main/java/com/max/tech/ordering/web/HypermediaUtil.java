@@ -1,39 +1,19 @@
 package com.max.tech.ordering.web;
 
-import com.max.tech.ordering.application.client.dto.ClientDTO;
-import com.max.tech.ordering.application.order.dto.AddProductsToOrderCommand;
-import com.max.tech.ordering.application.order.dto.OrderDTO;
+import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.dto.OrderDTO;
 import lombok.experimental.UtilityClass;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 
 @UtilityClass
 public class HypermediaUtil {
     private final String PRODUCT_ID = "product_id";
-
-    public void addLinks(ClientDTO clientDTO) {
-        addSelfLink(clientDTO);
-        addDeleteLink(clientDTO);
-    }
-
-    private void addSelfLink(ClientDTO clientDTO) {
-        clientDTO.add(
-                WebMvcLinkBuilder.linkTo(
-                        WebMvcLinkBuilder.methodOn(ClientController.class)
-                                .findClientById(clientDTO.getClientId()))
-                        .withSelfRel());
-    }
-
-    private void addDeleteLink(ClientDTO clientDTO) {
-        clientDTO.add(
-                WebMvcLinkBuilder.linkTo(
-                        WebMvcLinkBuilder.methodOn(ClientController.class)
-                                .deleteClient(clientDTO.getClientId()))
-                        .withRel("delete-client"));
-    }
+    private final String PAYMENT_ID = "payment_id";
 
     public void addLinks(OrderDTO orderDTO) {
         addSelfLink(orderDTO);
         addPutProductLink(orderDTO);
+        addPutPaymentLink(orderDTO);
         addDeleteProductLink(orderDTO);
         addDeleteProductsFromOrderLink(orderDTO);
         addFindOrderByClientIdLink(orderDTO);
@@ -54,6 +34,14 @@ public class HypermediaUtil {
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
                         .addProductToOrder(orderDTO.getOrderId(), new AddProductsToOrderCommand()))
                         .withRel("put-product")
+        );
+    }
+
+    private void addPutPaymentLink(OrderDTO orderDTO) {
+        orderDTO.add(
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
+                                .confirmPayment(orderDTO.getOrderId(), PAYMENT_ID))
+                        .withRel("put-payment")
         );
     }
 
@@ -84,7 +72,7 @@ public class HypermediaUtil {
     private void addPutDeliveryLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .takeOrderInDelivery(orderDTO.getClientId()))
+                        .takeOrderInDelivery(orderDTO.getOrderId()))
                         .withRel("put-delivery")
         );
     }
@@ -92,7 +80,7 @@ public class HypermediaUtil {
     private void addPatchDeliveryLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .deliverOrder(orderDTO.getClientId()))
+                        .deliverOrder(orderDTO.getOrderId()))
                         .withRel("patch-delivery")
         );
     }

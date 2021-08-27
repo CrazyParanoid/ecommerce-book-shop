@@ -1,7 +1,6 @@
 package com.max.tech.ordering.web;
 
-import com.max.tech.ordering.application.order.ClientNotFoundException;
-import com.max.tech.ordering.application.order.OrderNotFoundException;
+import com.max.tech.ordering.application.OrderNotFoundException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +17,8 @@ import java.time.LocalDateTime;
 @ControllerAdvice(annotations = RestController.class)
 public class WebExceptionHandler {
 
-    @ExceptionHandler({OrderNotFoundException.class, ClientNotFoundException.class})
-    private ResponseEntity<WebError> catchOrderNotFoundException(RuntimeException ex) {
+    @ExceptionHandler(OrderNotFoundException.class)
+    private ResponseEntity<WebError> catchOrderNotFoundException(OrderNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 new WebError(
                         HttpStatus.NOT_FOUND,

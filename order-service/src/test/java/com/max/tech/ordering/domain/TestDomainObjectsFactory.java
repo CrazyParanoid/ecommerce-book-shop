@@ -2,9 +2,7 @@ package com.max.tech.ordering.domain;
 
 import com.max.tech.ordering.domain.payment.PaymentId;
 import com.max.tech.ordering.util.TestValues;
-import com.max.tech.ordering.domain.client.Client;
-import com.max.tech.ordering.domain.client.ClientId;
-import com.max.tech.ordering.domain.employee.EmployeeId;
+import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.product.ProductId;
 import lombok.experimental.UtilityClass;
 
@@ -17,35 +15,10 @@ public class TestDomainObjectsFactory {
         return order;
     }
 
-    public Client newClient() {
-        return Client.newBuilder()
-                .withId(TestValues.CLIENT_ID)
-                .withAddress(
-                        TestValues.CITY,
-                        TestValues.STREET,
-                        TestValues.HOUSE,
-                        TestValues.FLAT,
-                        TestValues.FLOOR,
-                        TestValues.ENTRANCE
-                )
-                .build();
-    }
-
     public Order newOrder() {
-        return Order.newOrder(
-                ClientId.fromValue(TestValues.CLIENT_ID),
-                newAddress()
-        );
-    }
-
-    private Address newAddress() {
-        return new Address(
-                TestValues.CITY,
-                TestValues.STREET,
-                TestValues.HOUSE,
-                TestValues.FLAT,
-                TestValues.FLOOR,
-                TestValues.ENTRANCE
+        return Order.place(
+                PersonId.fromValue(TestValues.CLIENT_ID),
+                AddressId.fromValue(TestValues.ADDRESS_ID)
         );
     }
 
@@ -79,15 +52,15 @@ public class TestDomainObjectsFactory {
 
     public Order newPendingForDeliveringOrder() {
         var order = newPendingDeliveryServiceOrder();
-        order.takeInDelivery(EmployeeId.fromValue(TestValues.EMPLOYEE_ID));
+        order.takeInDelivery(PersonId.fromValue(TestValues.EMPLOYEE_ID));
         return order;
     }
 
-    public OrderCreated raiseOrderCreatedDomainEvent() {
-        return new OrderCreated(
+    public OrderPlaced raiseOrderCreatedDomainEvent() {
+        return new OrderPlaced(
                 OrderId.fromValue(TestValues.ORDER_ID),
-                ClientId.fromValue(TestValues.CLIENT_ID),
-                newAddress()
+                PersonId.fromValue(TestValues.CLIENT_ID),
+                AddressId.fromValue(TestValues.ADDRESS_ID)
         );
     }
 

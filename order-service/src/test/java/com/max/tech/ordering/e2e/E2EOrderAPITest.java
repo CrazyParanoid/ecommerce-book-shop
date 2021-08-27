@@ -3,10 +3,8 @@ package com.max.tech.ordering.e2e;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.Application;
 import com.max.tech.ordering.application.TestApplicationObjectsFactory;
-import com.max.tech.ordering.application.order.dto.OrderDTO;
+import com.max.tech.ordering.application.dto.OrderDTO;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
-import com.max.tech.ordering.domain.TestDomainObjectsFactory;
-import com.max.tech.ordering.domain.client.ClientRepository;
 import com.max.tech.ordering.util.AssertionUtil;
 import com.max.tech.ordering.util.WebUtil;
 import lombok.SneakyThrows;
@@ -39,8 +37,6 @@ public class E2EOrderAPITest {
     @Autowired
     private WebApplicationContext webApplicationContext;
     @Autowired
-    private ClientRepository clientRepository;
-    @Autowired
     private ObjectMapper objectMapper;
 
     private MockMvc mockMvc;
@@ -52,9 +48,8 @@ public class E2EOrderAPITest {
 
     @Test
     @SneakyThrows
-    public void test_create_new_order() {
+    public void test_place_order() {
         WebUtil.mockSecurity();
-        clientRepository.save(TestDomainObjectsFactory.newClient());
 
         var response = postNewOrder();
 
@@ -71,7 +66,7 @@ public class E2EOrderAPITest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                TestApplicationObjectsFactory.newCreateNewOrderCommand())
+                                TestApplicationObjectsFactory.newPlaceOrderCommand())
                         )
         ).andExpect(MockMvcResultMatchers.status().isCreated())
                 .andReturn()

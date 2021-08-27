@@ -1,14 +1,11 @@
 package com.max.tech.ordering.application;
 
-import com.max.tech.ordering.application.order.OrderAssembler;
-import com.max.tech.ordering.application.order.OrderService;
-import com.max.tech.ordering.application.order.dto.OrderDTO;
+import com.max.tech.ordering.application.dto.OrderDTO;
 import com.max.tech.ordering.domain.Order;
 import com.max.tech.ordering.domain.OrderId;
 import com.max.tech.ordering.domain.OrderRepository;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
-import com.max.tech.ordering.domain.client.ClientId;
-import com.max.tech.ordering.domain.client.ClientRepository;
+import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
 import com.max.tech.ordering.util.AssertionUtil;
@@ -28,8 +25,6 @@ public class OrderServiceTest {
     private DomainEventPublisher domainEventPublisher;
     @Mock
     private OrderRepository orderRepository;
-    @Mock
-    private ClientRepository clientRepository;
 
     @Captor
     private ArgumentCaptor<Order> orderCaptor;
@@ -40,20 +35,18 @@ public class OrderServiceTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        this.orderService = new OrderService(orderRepository, domainEventPublisher, new OrderAssembler(), clientRepository);
+        this.orderService = new OrderService(orderRepository, domainEventPublisher, new OrderAssembler());
     }
 
     @Test
-    public void test_create_new_order() {
+    public void test_place_order() {
         Mockito.doNothing().when(orderRepository).save(ArgumentMatchers.any(Order.class));
         Mockito.doNothing().when(domainEventPublisher).publish(ArgumentMatchers.anyList());
-        Mockito.when(orderRepository.findPendingProductsOrdersForClient(ArgumentMatchers.any(ClientId.class)))
+        Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
                 .thenReturn(Collections.emptyList());
-        Mockito.when(clientRepository.findClientById(ArgumentMatchers.any(ClientId.class)))
-                .thenReturn(Optional.of(TestDomainObjectsFactory.newClient()));
 
-        var orderDTO = orderService.createNewOrder(
-                TestApplicationObjectsFactory.newCreateNewOrderCommand()
+        var orderDTO = orderService.placeOrder(
+                TestApplicationObjectsFactory.newPlaceOrderCommand()
         );
 
         AssertionUtil.assertOrderDTO(orderDTO);
@@ -161,7 +154,7 @@ public class OrderServiceTest {
 
     @Test
     public void test_find_orders_for_client() {
-        Mockito.when(orderRepository.findPendingProductsOrdersForClient(ArgumentMatchers.any(ClientId.class)))
+        Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
                 .thenReturn(Collections.singletonList(TestDomainObjectsFactory.newDeliveredOrder()));
 
         var orderDTOs = orderService.findPendingProductsOrders(TestValues.CLIENT_ID);
@@ -179,7 +172,7 @@ public class OrderServiceTest {
         Assertions.assertEquals(orderDTO.getCourierId(), TestValues.EMPLOYEE_ID);
         Assertions.assertFalse(orderDTO.getProducts().isEmpty());
         Assertions.assertEquals(orderDTO.getPaymentId(), TestValues.PAYMENT_ID);
-        Assertions.assertEquals(orderDTO.getDeliveryAddress(), TestValues.FULlL_ADDRESS);
+        Assertions.assertEquals(orderDTO.getDeliveryAddressId(), TestValues.ADDRESS_ID);
 
         var productDTO = orderDTO.getProducts()
                 .stream()

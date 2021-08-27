@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.Application;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
-import com.max.tech.ordering.infrastructure.events.publisher.OutputBindings;
 import com.max.tech.ordering.config.TransactionTemplateConfig;
 import com.max.tech.ordering.util.TestValues;
 import lombok.SneakyThrows;
@@ -45,7 +44,7 @@ public class DomainEventPublisherIT {
 
     @Test
     @SneakyThrows
-    public void test_publish_order_created_event() {
+    public void test_publish_order_placed_event() {
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
@@ -60,22 +59,15 @@ public class DomainEventPublisherIT {
                         .poll(6, TimeUnit.SECONDS)
         ).getPayload();
 
-        var integrationEvent = objectMapper.readValue((String) payload, OrderCreatedIntegrationEvent.class);
-        assertOrderCreatedIntegrationEvent(integrationEvent);
+        var integrationEvent = objectMapper.readValue((String) payload, OrderPlacedIntegrationEvent.class);
+        assertOrderPlacedIntegrationEvent(integrationEvent);
     }
 
-    private void assertOrderCreatedIntegrationEvent(OrderCreatedIntegrationEvent event){
-        var address = event.getDeliveryAddress();
+    private void assertOrderPlacedIntegrationEvent(OrderPlacedIntegrationEvent event){
         Assertions.assertNotNull(event);
-        Assertions.assertNotNull(address);
         Assertions.assertEquals(event.getOrderId(), TestValues.ORDER_ID);
         Assertions.assertEquals(event.getClientId(), TestValues.CLIENT_ID);
-        Assertions.assertEquals(address.getCity(), TestValues.CITY);
-        Assertions.assertEquals(address.getStreet(), TestValues.STREET);
-        Assertions.assertEquals(address.getHouse(), TestValues.HOUSE);
-        Assertions.assertEquals(address.getFlat(), TestValues.FLAT);
-        Assertions.assertEquals(address.getFloor(), TestValues.FLOOR);
-        Assertions.assertEquals(address.getEntrance(), TestValues.ENTRANCE);
+        Assertions.assertEquals(event.getDeliveryAddressId(), TestValues.ADDRESS_ID);
     }
 
 }

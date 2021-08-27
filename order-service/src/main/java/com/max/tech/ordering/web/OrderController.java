@@ -1,10 +1,10 @@
 package com.max.tech.ordering.web;
 
-import com.max.tech.ordering.application.order.OrderService;
-import com.max.tech.ordering.application.order.dto.AddProductsToOrderCommand;
-import com.max.tech.ordering.application.order.dto.CreateNewOrderCommand;
-import com.max.tech.ordering.application.order.dto.OrderDTO;
-import com.max.tech.ordering.application.order.dto.TakeOrderToDeliveryCommand;
+import com.max.tech.ordering.application.OrderService;
+import com.max.tech.ordering.application.dto.AddProductsToOrderCommand;
+import com.max.tech.ordering.application.dto.PlaceOrderCommand;
+import com.max.tech.ordering.application.dto.OrderDTO;
+import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.web.security.User;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,10 +30,10 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @ApiOperation(value = "Create new order")
-    public OrderDTO createNewOrder(@RequestBody @Valid CreateNewOrderCommand command) {
+    @ApiOperation(value = "Place order")
+    public OrderDTO placeOrder(@RequestBody @Valid PlaceOrderCommand command) {
         command.setClientId(extractClientId());
-        var oderDTO = orderService.createNewOrder(command);
+        var oderDTO = orderService.placeOrder(command);
         HypermediaUtil.addLinks(oderDTO);
         return oderDTO;
     }
@@ -52,6 +52,13 @@ public class OrderController {
     @ApiOperation(value = "Find pending products orders for client")
     public List<OrderDTO> findPendingProductsOrdersByClientId(@RequestParam("client_id") String clientId) {
         return orderService.findPendingProductsOrders(clientId);
+    }
+
+    @PutMapping(value = "/{orderId}/payment/{paymentId}")
+    @ApiOperation(value = "Confirm order payment")
+    public ResponseEntity<Void> confirmPayment(@PathVariable String orderId, @PathVariable String paymentId){
+        orderService.confirmOrderPayment(orderId, paymentId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping(value = "/{orderId}/products")
