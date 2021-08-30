@@ -1,4 +1,4 @@
-package com.max.tech.ordering.domain.product;
+package com.max.tech.ordering.domain.item;
 
 import com.max.tech.ordering.domain.common.ValueObject;
 import lombok.AccessLevel;
@@ -17,13 +17,13 @@ import java.util.UUID;
 @Embeddable
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProductId implements ValueObject, Serializable {
+public class OrderItemId implements ValueObject, Serializable {
     @Type(type = "org.hibernate.type.UUIDBinaryType")
-    @Column(name = "product_id")
+    @Column(name = "item_id")
     private UUID value;
 
-    public static ProductId fromValue(String value) {
-        return new ProductId(UUID.fromString(value));
+    public static OrderItemId fromValue(String value) {
+        return new OrderItemId(UUID.fromString(value));
     }
 
     @Override
@@ -36,8 +36,8 @@ public class ProductId implements ValueObject, Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        ProductId productId = (ProductId) o;
-        return Objects.equals(value, productId.value);
+        OrderItemId orderItemId = (OrderItemId) o;
+        return Objects.equals(value, orderItemId.value);
     }
 
     @Override

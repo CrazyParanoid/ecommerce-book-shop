@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.application.OrderNotFoundException;
 import com.max.tech.ordering.application.OrderService;
 import com.max.tech.ordering.application.TestApplicationObjectsFactory;
+import com.max.tech.ordering.application.dto.AddItemToOrderCommand;
 import com.max.tech.ordering.application.dto.PlaceOrderCommand;
-import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
-import com.max.tech.ordering.util.TestValues;
-import com.max.tech.ordering.util.WebUtil;
+import com.max.tech.ordering.helper.TestValues;
+import com.max.tech.ordering.helper.WebUtil;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,87 +50,65 @@ public class OrderControllerAPITest {
 
     @Test
     @SneakyThrows
-    public void test_post_new_order() {
+    public void shouldPostNewOrder() {
         Mockito.when(orderService.placeOrder(ArgumentMatchers.any(PlaceOrderCommand.class)))
                 .thenReturn(TestApplicationObjectsFactory.newOrderDTO());
 
         var actualResponse = postNewOrder();
 
         var expectedResponse = WebUtil.getResponse("classpath:json/order_response.json");
-        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.STRICT);
+        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.LENIENT);
     }
 
     @SneakyThrows
     private String postNewOrder() {
         return mockMvc.perform(
-                MockMvcRequestBuilders.post(
-                        "/api/v1/orders"
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(
-                                TestApplicationObjectsFactory.newPlaceOrderCommand()
-                        ))
-        ).andExpect(MockMvcResultMatchers.status().isCreated())
+                        MockMvcRequestBuilders.post(
+                                        "/api/v1/orders"
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType("application/json")
+                                .content(objectMapper.writeValueAsString(
+                                        TestApplicationObjectsFactory.newPlaceOrderCommand()
+                                ))
+                ).andExpect(MockMvcResultMatchers.status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
     }
 
     @Test
-    public void test_delete_product() {
-        Mockito.doNothing().when(orderService).removeProductFromOrder(
+    @SneakyThrows
+    public void shouldDeleteItem() {
+        Mockito.when(orderService.removeItemFromOrder(
                 ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyString());
+                ArgumentMatchers.anyString())).thenReturn(TestApplicationObjectsFactory.newOrderDTOWithOneItem());
 
-        var actualResponse = deleteProduct();
+        var actualResponse = deleteItem();
 
-        Assertions.assertTrue(actualResponse.isBlank());
+        var expectedResponse = WebUtil.getResponse("classpath:json/order_response_with_one_item.json");
+        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.LENIENT);
     }
 
     @SneakyThrows
-    private String deleteProduct() {
+    private String deleteItem() {
         return mockMvc.perform(
-                MockMvcRequestBuilders.delete(
-                        "/api/v1/orders/{id}/products/{productId}",
-                        TestValues.ORDER_ID, TestValues.FIRST_PRODUCT_ID
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-        ).andExpect(MockMvcResultMatchers.status().isNoContent())
+                        MockMvcRequestBuilders.delete(
+                                        "/api/v1/orders/{id}/items/{itemId}",
+                                        TestValues.ORDER_ID, TestValues.FIRST_ITEM_ID
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType("application/json")
+                ).andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
     }
 
     @Test
-    public void test_delete_products_from_order() {
-        Mockito.doNothing().when(orderService).clearOrder(ArgumentMatchers.anyString());
-
-        var actualResponse = deleteProductsFromOrder();
-
-        Assertions.assertTrue(actualResponse.isBlank());
-    }
-
-    @SneakyThrows
-    private String deleteProductsFromOrder() {
-        return mockMvc.perform(
-                MockMvcRequestBuilders.delete(
-                        "/api/v1/orders/{orderId}",
-                        TestValues.ORDER_ID
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-        ).andExpect(MockMvcResultMatchers.status().isNoContent())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-    }
-
-    @Test
-    public void test_post_delivery() {
+    public void shouldPostDelivery() {
         Mockito.doNothing().when(orderService)
-                .takeOrderToDelivery(ArgumentMatchers.any(TakeOrderToDeliveryCommand.class));
+                .takeOrderToDelivery(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
 
         var actualResponse = postDelivery();
 
@@ -140,23 +118,20 @@ public class OrderControllerAPITest {
     @SneakyThrows
     private String postDelivery() {
         return mockMvc.perform(
-                MockMvcRequestBuilders.post(
-                        "/api/v1/orders/{orderId}/delivery",
-                        TestValues.ORDER_ID
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-                        .content(
-                                objectMapper.writeValueAsString(TestApplicationObjectsFactory.newTakeOrderToDeliveryCommand())
-                        )
-        ).andExpect(MockMvcResultMatchers.status().isNoContent())
+                        MockMvcRequestBuilders.post(
+                                        "/api/v1/orders/{orderId}/delivery",
+                                        TestValues.ORDER_ID
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType("application/json")
+                ).andExpect(MockMvcResultMatchers.status().isNoContent())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
     }
 
     @Test
-    public void test_patch_delivery() {
+    public void shouldPatchDelivery() {
         Mockito.doNothing().when(orderService).deliverOrder(ArgumentMatchers.anyString());
 
         var actualResponse = patchDelivery();
@@ -167,13 +142,13 @@ public class OrderControllerAPITest {
     @SneakyThrows
     private String patchDelivery() {
         return mockMvc.perform(
-                MockMvcRequestBuilders.patch(
-                        "/api/v1/orders/{orderId}/delivery",
-                        TestValues.ORDER_ID
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-        ).andExpect(MockMvcResultMatchers.status().isNoContent())
+                        MockMvcRequestBuilders.patch(
+                                        "/api/v1/orders/{orderId}/delivery",
+                                        TestValues.ORDER_ID
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType("application/json")
+                ).andExpect(MockMvcResultMatchers.status().isNoContent())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -181,26 +156,26 @@ public class OrderControllerAPITest {
 
     @Test
     @SneakyThrows
-    public void test_get_order_by_id() {
+    public void shouldReturnOrderById() {
         Mockito.when(orderService.findOrderById(ArgumentMatchers.anyString()))
                 .thenReturn(TestApplicationObjectsFactory.newOrderDTO());
 
         var actualResponse = getOrder(MockMvcResultMatchers.status().isOk());
 
         var expectedResponse = WebUtil.getResponse("classpath:json/order_response.json");
-        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.STRICT);
+        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.LENIENT);
     }
 
     @SneakyThrows
     private String getOrder(ResultMatcher resultMatcher) {
         return mockMvc.perform(
-                MockMvcRequestBuilders.get(
-                        "/api/v1/orders/{orderId}",
-                        TestValues.ORDER_ID
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType("application/json")
-        ).andExpect(resultMatcher)
+                        MockMvcRequestBuilders.get(
+                                        "/api/v1/orders/{orderId}",
+                                        TestValues.ORDER_ID
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType("application/json")
+                ).andExpect(resultMatcher)
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -208,7 +183,7 @@ public class OrderControllerAPITest {
 
     @Test
     @SneakyThrows
-    public void test_get_404_response() {
+    public void shouldReturn404Response() {
         Mockito.when(orderService.findOrderById(ArgumentMatchers.anyString()))
                 .thenThrow(new OrderNotFoundException(String.format("Order with id %s is not found", TestValues.ORDER_ID)));
 
@@ -219,6 +194,36 @@ public class OrderControllerAPITest {
                 expectedResponse, actualResponse,
                 new CustomComparator(JSONCompareMode.LENIENT, new Customization("timestamp", (o, t1) -> true))
         );
+    }
+
+    @Test
+    @SneakyThrows
+    public void shouldPutOrderItem() {
+        Mockito.when(orderService.addItemToOrder(ArgumentMatchers.any(AddItemToOrderCommand.class)))
+                .thenReturn(TestApplicationObjectsFactory.newOrderDTO());
+
+        var actualResponse = putOrderItem();
+
+        var expectedResponse = WebUtil.getResponse("classpath:json/order_response.json");
+        JSONAssert.assertEquals(actualResponse, expectedResponse, JSONCompareMode.LENIENT);
+    }
+
+    @SneakyThrows
+    private String putOrderItem() {
+        return mockMvc.perform(
+                        MockMvcRequestBuilders.put(
+                                        "/api/v1/orders/{orderId}/items",
+                                        TestValues.ORDER_ID
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType("application/json")
+                                .content(objectMapper.writeValueAsString(
+                                        TestApplicationObjectsFactory.newAddItemToOrderCommand()
+                                ))
+                ).andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
     }
 
 }

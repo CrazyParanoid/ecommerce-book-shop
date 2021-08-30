@@ -5,9 +5,11 @@ import com.max.tech.ordering.Application;
 import com.max.tech.ordering.application.TestApplicationObjectsFactory;
 import com.max.tech.ordering.application.dto.OrderDTO;
 import com.max.tech.ordering.config.TestAuthenticationConfig;
-import com.max.tech.ordering.util.AssertionUtil;
-import com.max.tech.ordering.util.WebUtil;
+import com.max.tech.ordering.domain.Order;
+import com.max.tech.ordering.helper.TestValues;
+import com.max.tech.ordering.helper.WebUtil;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,27 +50,49 @@ public class E2EOrderAPITest {
 
     @Test
     @SneakyThrows
-    public void test_place_order() {
+    public void shouldPlaceOrder() {
         WebUtil.mockSecurity();
 
         var response = postNewOrder();
 
         var order = objectMapper.readValue(response, OrderDTO.class);
-        AssertionUtil.assertOrderDTO(order);
+        assertOrderDTO(order);
+    }
+
+    private void assertOrderDTO(OrderDTO orderDTO) {
+        Assertions.assertNotNull(orderDTO.getOrderId());
+        Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
+        Assertions.assertNull(orderDTO.getDeliveredAt());
+        Assertions.assertEquals(orderDTO.getStatus(), Order.Status.PENDING_PAYMENT.name());
+        Assertions.assertNull(orderDTO.getCourierId());
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
+        Assertions.assertFalse(orderDTO.getItems().isEmpty());
+        Assertions.assertNull(orderDTO.getPaymentId());
+        Assertions.assertEquals(orderDTO.getDeliveryAddressId(), TestValues.ADDRESS_ID);
+
+        var itemDTO = orderDTO.getItems()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        Assertions.assertNotNull(itemDTO);
+        Assertions.assertEquals(itemDTO.getItemId(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(itemDTO.getPrice(), TestValues.FIRST_ITEM_PRICE);
+        Assertions.assertEquals(itemDTO.getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
     }
 
     @SneakyThrows
     private String postNewOrder() {
         return mockMvc.perform(
-                MockMvcRequestBuilders.post(
-                        "/api/v1/orders"
-                )
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                TestApplicationObjectsFactory.newPlaceOrderCommand())
-                        )
-        ).andExpect(MockMvcResultMatchers.status().isCreated())
+                        MockMvcRequestBuilders.post(
+                                        "/api/v1/orders"
+                                )
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                        TestApplicationObjectsFactory.newPlaceOrderCommand())
+                                )
+                ).andExpect(MockMvcResultMatchers.status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

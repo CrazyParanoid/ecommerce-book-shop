@@ -6,6 +6,7 @@ import com.max.tech.catalog.catalog.Application;
 import com.max.tech.catalog.catalog.events.order.OrderDelivered;
 import com.max.tech.catalog.catalog.product.Product;
 import com.max.tech.catalog.catalog.product.ProductRepository;
+import com.max.tech.catalog.config.MongoConfig;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.MessageBuilder;
@@ -30,6 +32,7 @@ import java.util.concurrent.TimeUnit;
         partitions = 1,
         topics = "orderEventsTopic"
 )
+@Import(MongoConfig.class)
 @SpringBootTest(classes = Application.class)
 public class OrderDeliveredEventSubscriberIT {
     @Autowired
@@ -42,7 +45,7 @@ public class OrderDeliveredEventSubscriberIT {
     private static final String EVENT_TYPE_VALUE = "OrderDelivered";
 
     @Test
-    public void test_on_order_delivered_event() {
+    public void shouldGetOrderDeliveredEvent() {
         Mockito.when(productRepository.findById(ArgumentMatchers.any(UUID.class)))
                 .thenReturn(Optional.of(TestProductFactory.newProduct()));
         Mockito.when(productRepository.save(ArgumentMatchers.any(Product.class)))

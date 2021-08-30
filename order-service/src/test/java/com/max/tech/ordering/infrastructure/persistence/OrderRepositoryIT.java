@@ -4,7 +4,7 @@ import com.max.tech.ordering.Application;
 import com.max.tech.ordering.domain.OrderRepository;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
 import com.max.tech.ordering.domain.person.PersonId;
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.helper.TestValues;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,8 @@ public class OrderRepositoryIT {
     private OrderRepository orderRepository;
 
     @Test
-    public void test_save_new_order() {
-        var order = TestDomainObjectsFactory.newOrderWithOneProduct();
+    public void shouldSaveNewOrder() {
+        var order = TestDomainObjectsFactory.newOrderWithOneItem();
 
         orderRepository.save(order);
 
@@ -32,8 +32,8 @@ public class OrderRepositoryIT {
     }
 
     @Test
-    public void test_find_pending_payment_orders() {
-        var order = TestDomainObjectsFactory.newOrderWithOneProduct();
+    public void shouldReturnPendingPaymentsOrders() {
+        var order = TestDomainObjectsFactory.newOrderWithOneItem();
         orderRepository.save(order);
 
         var orders = orderRepository.findPendingPaymentOrdersForClient(PersonId.fromValue(TestValues.CLIENT_ID));

@@ -1,6 +1,6 @@
 package com.max.tech.ordering.config;
 
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.helper.TestValues;
 import com.max.tech.ordering.web.security.User;
 import com.max.tech.ordering.web.security.UserAuthentication;
 import org.springframework.context.annotation.Bean;

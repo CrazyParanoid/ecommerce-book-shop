@@ -3,8 +3,8 @@ package com.max.tech.ordering.domain;
 import com.max.tech.ordering.domain.common.AggregateRoot;
 import com.max.tech.ordering.domain.payment.PaymentId;
 import com.max.tech.ordering.domain.person.PersonId;
-import com.max.tech.ordering.domain.product.Product;
-import com.max.tech.ordering.domain.product.ProductId;
+import com.max.tech.ordering.domain.item.OrderItem;
+import com.max.tech.ordering.domain.item.OrderItemId;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Entity
@@ -44,13 +43,13 @@ public class Order extends AggregateRoot {
     @Column(name = "status", columnDefinition = "TEXT")
     private Status status = Status.PENDING_PAYMENT;
     @OneToMany(
-            targetEntity = Product.class,
+            targetEntity = OrderItem.class,
             mappedBy = "order",
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY,
             orphanRemoval = true
     )
-    private final Set<Product> products = new HashSet<>();
+    private final Set<OrderItem> items = new HashSet<>();
     private LocalDateTime deliveredAt;
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "courier_id"))
@@ -66,56 +65,58 @@ public class Order extends AggregateRoot {
     }
 
     /**
-     * Add selected product to order. If a product with this ID already exists, it will be updated.
+     * Add selected item to order.
      * The total cost of the order will be recalculated.
      * The discount will also be calculated according to the domain rules.
      *
-     * @param productId selected product ID
-     * @param price     selected product price
-     * @param quantity  selected product quantity
+     * @param itemId   selected item ID
+     * @param price    selected item price
+     * @param quantity selected item quantity
      */
-    public void addProduct(ProductId productId, Amount price, Integer quantity) {
+    public void addItem(OrderItemId itemId, Amount price, Integer quantity) {
         if (this.status != Status.PENDING_PAYMENT)
-            throw new IllegalStateException("Wrong invocation for current state");
+            throw new IllegalStateException(String.format("Wrong invocation for current state:" +
+                    " expected PENDING_PAYMENT, but actual %s", this.status.name()));
 
-        this.products.stream()
-                .filter(p -> p.getProductId().equals(productId))
+        this.items.stream()
+                .filter(item -> item.itemId().equals(itemId))
                 .findAny()
-                .ifPresentOrElse(product -> updateExistedProduct(product, price, quantity),
-                        () -> addNewProduct(productId, price, quantity));
+                .ifPresentOrElse(item -> updateExistedOrderItem(item, quantity),
+                        () -> addNewOrderItem(itemId, price, quantity));
     }
 
-    private void addNewProduct(ProductId productId, Amount price, Integer quantity) {
-        var product = new Product(productId, price, quantity, this);
-        product.validate();
+    private void addNewOrderItem(OrderItemId itemId, Amount price, Integer quantity) {
+        var item = new OrderItem(itemId, price, quantity, this);
+        item.validate();
 
-        this.products.add(product);
-        calculateTotalPrice(price, quantity);
+        this.items.add(item);
+        calculateTotalPrice(item);
 
-        raiseDomainEvent(new ProductAddedToOrder(
+        raiseDomainEvent(new OrderItemAdded(
                 this.orderId,
-                productId,
-                product.getQuantity(),
+                itemId,
+                item.quantity(),
                 this.totalPrice));
     }
 
-    private void updateExistedProduct(Product product, Amount newPrice, Integer newQuantity) {
-        reduceTotalPrice(product);
-        product.update(newPrice, newQuantity);
-        calculateTotalPrice(newPrice, newQuantity);
+    private void updateExistedOrderItem(OrderItem item, Integer quantity) {
+        reduceTotalPrice(item);
+        item.update(quantity);
+        calculateTotalPrice(item);
 
-        raiseDomainEvent(new ProductInOrderUpdated(
-                this.orderId,
-                product.getProductId(),
-                newPrice,
-                newQuantity,
-                this.totalPrice));
+        raiseDomainEvent(
+                new OrderItemUpdated(
+                        this.orderId,
+                        item.itemId(),
+                        item.quantity(),
+                        this.totalPrice
+                )
+        );
     }
 
-
-    private void calculateTotalPrice(Amount price, Integer quantity) {
+    private void calculateTotalPrice(OrderItem item) {
         this.totalPrice = this.totalPrice.add(
-                price.multiply(Double.valueOf(quantity))
+                item.price().multiply(Double.valueOf(item.quantity()))
         );
         if (this.totalPrice.greaterOrEquals(DISCOUNT_THRESHOLD)) {
             var discountValue = this.totalPrice.multiply(DISCOUNT_PERCENTAGE / 100);
@@ -123,55 +124,55 @@ public class Order extends AggregateRoot {
         }
     }
 
-    public void removeProduct(ProductId productId) {
+    public void removeItem(OrderItemId itemId) {
         if (this.status != Status.PENDING_PAYMENT)
-            throw new IllegalStateException("Wrong invocation for current state");
-        if (this.products.isEmpty())
-            throw new IllegalStateException("Order products can't be empty");
+            throw new IllegalStateException(String.format("Wrong invocation for current state:" +
+                    " expected PENDING_PAYMENT, but actual %s", this.status.name()));
+        if (this.items.isEmpty())
+            throw new IllegalStateException(String.format("Item with id %s can't be deleted." +
+                    " Order items can't be empty", itemId.toString()));
+        if (this.items.size() == 1)
+            throw new IllegalStateException("It is not possible to remove an item from an order with only one item.");
 
-        var product = findProductById(productId);
+        var item = findItemById(itemId);
 
-        reduceTotalPrice(product);
-        this.products.remove(product);
+        reduceTotalPrice(item);
+        this.items.remove(item);
+        calculateTotalPrice(item);
 
-        raiseDomainEvent(new ProductRemovedFromOrder(this.orderId, productId, this.totalPrice));
+        raiseDomainEvent(new OrderItemRemoved(this.orderId, itemId, this.totalPrice));
     }
 
-    private void reduceTotalPrice(Product product) {
-        var totalPriceWithoutDiscount = this.products.stream()
-                .map(Product::totalPrice)
+    private void reduceTotalPrice(OrderItem orderItem) {
+        var totalPriceWithoutDiscount = this.items.stream()
+                .map(OrderItem::totalPrice)
                 .reduce(Amount::add)
-                .orElseThrow(() -> new IllegalStateException("Total price without discount can't be empty"));
+                .orElseThrow(() -> new IllegalStateException("Impossible to reduce total price. " +
+                        "Total price without discount can't be empty"));
 
         if (totalPriceWithoutDiscount.greaterOrEquals(DISCOUNT_THRESHOLD))
             this.totalPrice = totalPriceWithoutDiscount;
 
-        this.totalPrice = this.totalPrice.subtract(product.totalPrice());
-    }
-
-    public void clearProducts() {
-        if (this.status != Status.PENDING_PAYMENT)
-            throw new IllegalStateException("Wrong invocation for current state");
-
-        this.products.clear();
-        raiseDomainEvent(new OrderCleaned(this.orderId));
+        this.totalPrice = this.totalPrice.subtract(orderItem.totalPrice());
     }
 
     public void confirmPayment(PaymentId paymentId) {
         if (this.status != Status.PENDING_PAYMENT)
-            throw new IllegalStateException("Wrong invocation for current state");
-        if (this.products.isEmpty())
-            throw new IllegalStateException("Order products can't be empty");
+            throw new IllegalStateException(String.format("Wrong invocation for current state:" +
+                    " expected PENDING_PAYMENT, but actual %s", this.status.name()));
+        if (this.items.isEmpty())
+            throw new IllegalStateException("Payment can't be confirmed. Order items can't be empty");
 
         this.paymentId = paymentId;
         this.status = Status.PENDING_DELIVERY_SERVICE;
 
-        raiseDomainEvent(new OrderPaid(this.orderId, paymentId));
+        raiseDomainEvent(new OrderPaid(this.orderId, this.paymentId, this.items));
     }
 
     public void takeInDelivery(PersonId courierId) {
         if (this.status != Status.PENDING_DELIVERY_SERVICE)
-            throw new IllegalStateException("Wrong invocation for current state");
+            throw new IllegalStateException(String.format("Wrong invocation for current state:" +
+                    " expected PENDING_DELIVERY_SERVICE, but actual %s", this.status.name()));
 
         this.courierId = courierId;
         this.status = Status.PENDING_FOR_DELIVERING;
@@ -181,27 +182,24 @@ public class Order extends AggregateRoot {
 
     public void deliver() {
         if (this.status != Status.PENDING_FOR_DELIVERING)
-            throw new IllegalStateException("Wrong invocation for current state");
+            if (this.status != Status.PENDING_DELIVERY_SERVICE)
+                throw new IllegalStateException(String.format("Wrong invocation for current state:" +
+                        " expected PENDING_FOR_DELIVERING, but actual %s", this.status.name()));
 
         this.deliveredAt = LocalDateTime.now();
         this.status = Status.DELIVERED;
-        var productsQuantitiesMap = this.products.stream()
-                .collect(Collectors.toMap(
-                        Product::getProductId,
-                        Product::getQuantity));
 
         raiseDomainEvent(new OrderDelivered(
                 this.orderId,
-                this.deliveredAt,
-                productsQuantitiesMap));
+                this.deliveredAt));
     }
 
-    public Product findProductById(ProductId productId) {
-        return this.products.stream()
-                .filter(p -> p.getProductId().equals(productId))
+    public OrderItem findItemById(OrderItemId itemId) {
+        return this.items.stream()
+                .filter(item -> item.itemId().equals(itemId))
                 .findAny()
-                .orElseThrow(() -> new IllegalStateException(String.format("Product with id %s is not found",
-                        productId.toString())));
+                .orElseThrow(() -> new IllegalStateException(String.format("Item with id %s is not found",
+                        itemId.toString())));
     }
 
     public static Order place(PersonId personId, AddressId deliveryAddressId) {
@@ -213,7 +211,8 @@ public class Order extends AggregateRoot {
         order.raiseDomainEvent(new OrderPlaced(
                 order.orderId,
                 order.personId,
-                order.deliveryAddressId));
+                order.deliveryAddressId,
+                order.items));
 
         return order;
     }

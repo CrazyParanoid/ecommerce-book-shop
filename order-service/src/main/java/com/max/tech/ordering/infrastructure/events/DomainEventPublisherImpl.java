@@ -6,7 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
-import com.max.tech.ordering.domain.product.Product;
+import com.max.tech.ordering.domain.item.OrderItem;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
                         new ExclusionStrategy() {
                             @Override
                             public boolean shouldSkipField(FieldAttributes field) {
-                                return field.getDeclaringClass() == Product.class
+                                return field.getDeclaringClass() == OrderItem.class
                                         && field.getName().equals("order");
                             }
 

@@ -21,7 +21,7 @@ public class ProductRepositoryIT {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    public void test_save_product(){
+    public void shouldSaveProduct(){
         var product = TestProductFactory.newProduct();
         productRepository.save(product);
 

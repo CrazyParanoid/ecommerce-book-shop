@@ -1,4 +1,4 @@
-package com.max.tech.ordering.util;
+package com.max.tech.ordering.helper;
 
 import com.google.common.io.Files;
 import com.max.tech.ordering.web.security.User;

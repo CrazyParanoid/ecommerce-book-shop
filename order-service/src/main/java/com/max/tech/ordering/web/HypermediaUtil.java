@@ -1,19 +1,20 @@
 package com.max.tech.ordering.web;
 
+import com.max.tech.ordering.application.dto.AddItemToOrderCommand;
 import com.max.tech.ordering.application.dto.OrderDTO;
 import lombok.experimental.UtilityClass;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 
 @UtilityClass
 public class HypermediaUtil {
-    private final String PRODUCT_ID = "product_id";
+    private final String ITEM_ID = "item_id";
     private final String PAYMENT_ID = "payment_id";
 
     public void addLinks(OrderDTO orderDTO) {
         addSelfLink(orderDTO);
         addPutPaymentLink(orderDTO);
-        addDeleteProductLink(orderDTO);
-        addDeleteProductsFromOrderLink(orderDTO);
+        addPutItemLink(orderDTO);
+        addDeleteItemLink(orderDTO);
         addFindOrderByClientIdLink(orderDTO);
         addPutDeliveryLink(orderDTO);
         addPatchDeliveryLink(orderDTO);
@@ -22,8 +23,8 @@ public class HypermediaUtil {
     private void addSelfLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(
-                        WebMvcLinkBuilder.methodOn(OrderController.class)
-                                .findOrderById(orderDTO.getOrderId()))
+                                WebMvcLinkBuilder.methodOn(OrderController.class)
+                                        .findOrderById(orderDTO.getOrderId()))
                         .withSelfRel());
     }
 
@@ -35,26 +36,26 @@ public class HypermediaUtil {
         );
     }
 
-    private void addDeleteProductLink(OrderDTO orderDTO) {
+    private void addPutItemLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .removeProductFromOrder(orderDTO.getOrderId(), PRODUCT_ID))
-                        .withRel("delete-product")
+                                .addItemToOrder(orderDTO.getOrderId(), new AddItemToOrderCommand()))
+                        .withRel("put-item")
         );
     }
 
-    private void addDeleteProductsFromOrderLink(OrderDTO orderDTO) {
+    private void addDeleteItemLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .clearOrder(orderDTO.getOrderId()))
-                        .withRel("delete-products-from-order")
+                                .removeItemFromOrder(orderDTO.getOrderId(), ITEM_ID))
+                        .withRel("delete-item")
         );
     }
 
     private void addFindOrderByClientIdLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .findPendingProductsOrdersByClientId(orderDTO.getClientId()))
+                                .findPendingPaymentOrdersByClientId(orderDTO.getClientId()))
                         .withRel("get-order-by-client_id")
         );
     }
@@ -62,7 +63,7 @@ public class HypermediaUtil {
     private void addPutDeliveryLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .takeOrderInDelivery(orderDTO.getOrderId()))
+                                .takeOrderInDelivery(orderDTO.getOrderId()))
                         .withRel("put-delivery")
         );
     }
@@ -70,7 +71,7 @@ public class HypermediaUtil {
     private void addPatchDeliveryLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                        .deliverOrder(orderDTO.getOrderId()))
+                                .deliverOrder(orderDTO.getOrderId()))
                         .withRel("patch-delivery")
         );
     }

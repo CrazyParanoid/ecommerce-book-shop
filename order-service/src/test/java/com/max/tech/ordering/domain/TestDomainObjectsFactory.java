@@ -1,10 +1,13 @@
 package com.max.tech.ordering.domain;
 
 import com.max.tech.ordering.domain.payment.PaymentId;
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.domain.item.OrderItem;
+import com.max.tech.ordering.helper.TestValues;
 import com.max.tech.ordering.domain.person.PersonId;
-import com.max.tech.ordering.domain.product.ProductId;
+import com.max.tech.ordering.domain.item.OrderItemId;
 import lombok.experimental.UtilityClass;
+
+import java.util.Set;
 
 @UtilityClass
 public class TestDomainObjectsFactory {
@@ -22,12 +25,28 @@ public class TestDomainObjectsFactory {
         );
     }
 
-    public Order newOrderWithOneProduct() {
+    public Order newOrderWithOneItem() {
         var order = newOrder();
-        order.addProduct(
-                ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                Amount.fromValue(TestValues.FIRST_PRODUCT_PRICE),
-                TestValues.FIRST_PRODUCT_QUANTITY
+        order.addItem(
+                OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                Amount.fromValue(TestValues.FIRST_ITEM_PRICE),
+                TestValues.FIRST_ITEM_QUANTITY
+        );
+
+        return order;
+    }
+
+    public Order newOrderWithTwoItems() {
+        var order = newOrder();
+        order.addItem(
+                OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                Amount.fromValue(TestValues.FIRST_ITEM_PRICE),
+                TestValues.FIRST_ITEM_QUANTITY
+        );
+        order.addItem(
+                OrderItemId.fromValue(TestValues.SECOND_ITEM_ID),
+                Amount.fromValue(TestValues.SECOND_ITEM_PRICE),
+                TestValues.SECOND_ITEM_QUANTITY
         );
 
         return order;
@@ -35,17 +54,17 @@ public class TestDomainObjectsFactory {
 
     public Order newOrderWithDiscount() {
         var order = newOrder();
-        order.addProduct(
-                ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                Amount.fromValue(TestValues.PRODUCT_PRICE_WITH_DISCOUNT),
-                TestValues.FIRST_PRODUCT_QUANTITY
+        order.addItem(
+                OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                Amount.fromValue(TestValues.ITEM_PRICE_WITH_DISCOUNT),
+                TestValues.FIRST_ITEM_QUANTITY
         );
 
         return order;
     }
 
     public Order newPendingDeliveryServiceOrder() {
-        var order = newOrderWithOneProduct();
+        var order = newOrderWithOneItem();
         order.confirmPayment(new PaymentId(TestValues.PAYMENT_ID));
         return order;
     }
@@ -56,11 +75,19 @@ public class TestDomainObjectsFactory {
         return order;
     }
 
-    public OrderPlaced raiseOrderCreatedDomainEvent() {
+    public OrderPlaced raiseOrderPlacedDomainEvent() {
         return new OrderPlaced(
                 OrderId.fromValue(TestValues.ORDER_ID),
                 PersonId.fromValue(TestValues.CLIENT_ID),
-                AddressId.fromValue(TestValues.ADDRESS_ID)
+                AddressId.fromValue(TestValues.ADDRESS_ID),
+                Set.of(
+                        new OrderItem(
+                                OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                                Amount.fromValue(TestValues.ITEM_PRICE_WITH_DISCOUNT),
+                                TestValues.FIRST_ITEM_QUANTITY,
+                                null
+                        )
+                )
         );
     }
 

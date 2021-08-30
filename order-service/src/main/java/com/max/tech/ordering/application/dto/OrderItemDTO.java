@@ -1,6 +1,5 @@
 package com.max.tech.ordering.application.dto;
 
-import com.max.tech.ordering.application.Json;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -14,15 +13,15 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiModel(description = "Selected product")
-public class ProductDTO implements Json {
-    @ApiModelProperty(value = "Product id", required = true)
-    @NotBlank(message = "product_id can't be null or empty")
-    private String productId;
-    @ApiModelProperty(value = "Product price", required = true, position = 1)
+@ApiModel(description = "Selected item")
+public class OrderItemDTO implements Json {
+    @ApiModelProperty(value = "Item id", required = true)
+    @NotBlank(message = "ItemId can't be null or empty")
+    private String itemId;
+    @ApiModelProperty(value = "Item price", required = true, position = 1)
     @NotNull(message = "price can't be null")
     private BigDecimal price;
-    @ApiModelProperty(value = "Product quantity", required = true, position = 2)
+    @ApiModelProperty(value = "Item quantity", required = true, position = 2)
     @NotNull(message = "quantity can't be null")
     private Integer quantity;
 }

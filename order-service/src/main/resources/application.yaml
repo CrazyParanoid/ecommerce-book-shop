@@ -28,15 +28,15 @@ spring:
     driverClassName: com.mysql.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/order_db?useUnicode=yes&characterEncoding=UTF-8&serverTimezone=Europe/Moscow}
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Password123!}
+    password: ${DB_PASSWORD:Password123}
   jpa:
     hibernate.ddl-auto: validate
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8080/auth/realms/test/protocol/openid-connect/certs}
-          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8080/auth/realms/test}
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8082/auth/realms/test/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8082/auth/realms/test}
 events:
   delay: 4000
 
@@ -57,3 +57,5 @@ management:
       enabled: true
     health:
       show-details: always
+server:
+  port: 8085

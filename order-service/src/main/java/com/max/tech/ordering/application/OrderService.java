@@ -1,17 +1,18 @@
 package com.max.tech.ordering.application;
 
+import com.max.tech.ordering.application.dto.AddItemToOrderCommand;
 import com.max.tech.ordering.application.dto.OrderDTO;
 import com.max.tech.ordering.application.dto.PlaceOrderCommand;
-import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.domain.*;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
 import com.max.tech.ordering.domain.payment.PaymentId;
 import com.max.tech.ordering.domain.person.PersonId;
-import com.max.tech.ordering.domain.product.ProductId;
+import com.max.tech.ordering.domain.item.OrderItemId;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class OrderService {
     }
 
     /**
-     * Place order with products, if they have been selected.
+     * Place order with items, if they have been selected.
      *
      * @param command request to place an order
      * @return created order
@@ -45,11 +46,11 @@ public class OrderService {
                 PersonId.fromValue(command.getClientId()),
                 AddressId.fromValue(command.getDeliveryAddressId())
         );
-        command.getProducts().forEach(
-                product -> order.addProduct(
-                        ProductId.fromValue(product.getProductId()),
-                        Amount.fromValue(product.getPrice()),
-                        product.getQuantity()
+        command.getItems().forEach(
+                item -> order.addItem(
+                        OrderItemId.fromValue(item.getItemId()),
+                        Amount.fromValue(item.getPrice()),
+                        item.getQuantity()
                 )
         );
 
@@ -62,33 +63,40 @@ public class OrderService {
 
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
-    public void removeProductFromOrder(String orderId, String productId) {
+    public OrderDTO removeItemFromOrder(String orderId, String itemId) {
         var order = orderRepository.findOrderById(OrderId.fromValue(orderId))
                 .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", orderId)));
 
-        order.removeProduct(ProductId.fromValue(productId));
+        order.removeItem(OrderItemId.fromValue(itemId));
 
         domainEventPublisher.publish(order.getDomainEvents());
         orderRepository.save(order);
 
-        log.info("Product with id {} has been removed from order, id {}", productId, orderId);
+        log.info("Item with id {} has been removed from order, id {}", itemId, orderId);
+        return orderAssembler.writeDTO(order);
     }
 
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
-    public void clearOrder(String orderId) {
-        var order = orderRepository.findOrderById(OrderId.fromValue(orderId))
-                .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", orderId)));
+    public OrderDTO addItemToOrder(AddItemToOrderCommand command) {
+        var order = orderRepository.findOrderById(OrderId.fromValue(command.getOrderId()))
+                .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", command.getOrderId())));
 
-        order.clearProducts();
+        order.addItem(
+                OrderItemId.fromValue(command.getItemId()),
+                Amount.fromValue(command.getPrice()),
+                command.getQuantity()
+        );
 
         domainEventPublisher.publish(order.getDomainEvents());
         orderRepository.save(order);
 
-        log.info("Order with id {} has been cleaned", orderId);
+        log.info("Item with id {} has been added to order, id {}", command.getItemId(), command.getOrderId());
+        return orderAssembler.writeDTO(order);
     }
 
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
     public void confirmOrderPayment(String orderId, String paymentId) {
         var order = orderRepository.findOrderById(OrderId.fromValue(orderId))
                 .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", orderId)));
@@ -101,18 +109,18 @@ public class OrderService {
         log.info("Payment for order with id {} has been confirmed", orderId);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('COURIER')")
-    public void takeOrderToDelivery(TakeOrderToDeliveryCommand command) {
-        var order = orderRepository.findOrderById(OrderId.fromValue(command.getOrderId()))
-                .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", command.getOrderId())));
+    public void takeOrderToDelivery(String anOrderId, String aCourierId) {
+        var order = orderRepository.findOrderById(OrderId.fromValue(anOrderId))
+                .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", anOrderId)));
 
-        order.takeInDelivery(PersonId.fromValue(command.getCourierId()));
+        order.takeInDelivery(PersonId.fromValue(aCourierId));
 
         domainEventPublisher.publish(order.getDomainEvents());
         orderRepository.save(order);
 
-        log.info("Order with id {} has been sent to delivery service", command.getOrderId());
+        log.info("Order with id {} has been sent to delivery service", anOrderId);
     }
 
     @Transactional
@@ -139,7 +147,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('BUYER')")
-    public List<OrderDTO> findPendingProductsOrders(String clientId) {
+    public List<OrderDTO> findPendingPaymentOrders(String clientId) {
         return orderRepository.findPendingPaymentOrdersForClient(PersonId.fromValue(clientId))
                 .stream()
                 .map(orderAssembler::writeDTO)

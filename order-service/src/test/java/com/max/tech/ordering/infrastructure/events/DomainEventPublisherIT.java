@@ -5,7 +5,7 @@ import com.max.tech.ordering.Application;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
 import com.max.tech.ordering.config.TransactionTemplateConfig;
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.helper.TestValues;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -44,12 +44,12 @@ public class DomainEventPublisherIT {
 
     @Test
     @SneakyThrows
-    public void test_publish_order_placed_event() {
+    public void shouldPublishOrderPlacedDomainEvent() {
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
                 domainEventPublisher.publish(Collections.singletonList(
-                        TestDomainObjectsFactory.raiseOrderCreatedDomainEvent())
+                        TestDomainObjectsFactory.raiseOrderPlacedDomainEvent())
                 );
             }
         });
@@ -60,14 +60,10 @@ public class DomainEventPublisherIT {
         ).getPayload();
 
         var integrationEvent = objectMapper.readValue((String) payload, OrderPlacedIntegrationEvent.class);
-        assertOrderPlacedIntegrationEvent(integrationEvent);
-    }
-
-    private void assertOrderPlacedIntegrationEvent(OrderPlacedIntegrationEvent event){
-        Assertions.assertNotNull(event);
-        Assertions.assertEquals(event.getOrderId(), TestValues.ORDER_ID);
-        Assertions.assertEquals(event.getClientId(), TestValues.CLIENT_ID);
-        Assertions.assertEquals(event.getDeliveryAddressId(), TestValues.ADDRESS_ID);
+        Assertions.assertNotNull(integrationEvent);
+        Assertions.assertEquals(integrationEvent.getOrderId(), TestValues.ORDER_ID);
+        Assertions.assertEquals(integrationEvent.getClientId(), TestValues.CLIENT_ID);
+        Assertions.assertEquals(integrationEvent.getDeliveryAddressId(), TestValues.ADDRESS_ID);
     }
 
 }

@@ -5,16 +5,16 @@ import com.max.tech.ordering.domain.Order;
 import com.max.tech.ordering.domain.OrderId;
 import com.max.tech.ordering.domain.OrderRepository;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
-import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
-import com.max.tech.ordering.util.AssertionUtil;
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.domain.person.PersonId;
+import com.max.tech.ordering.helper.TestValues;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +39,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void test_place_order() {
+    public void shouldPlaceOrder() {
         Mockito.doNothing().when(orderRepository).save(ArgumentMatchers.any(Order.class));
         Mockito.doNothing().when(domainEventPublisher).publish(ArgumentMatchers.anyList());
         Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
@@ -49,43 +49,65 @@ public class OrderServiceTest {
                 TestApplicationObjectsFactory.newPlaceOrderCommand()
         );
 
-        AssertionUtil.assertOrderDTO(orderDTO);
+        assertNewOrderDTO(orderDTO);
+    }
+
+    private void assertNewOrderDTO(OrderDTO orderDTO) {
+        Assertions.assertNotNull(orderDTO.getOrderId());
+        Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
+        Assertions.assertNull(orderDTO.getDeliveredAt());
+        Assertions.assertEquals(orderDTO.getStatus(), Order.Status.PENDING_PAYMENT.name());
+        Assertions.assertNull(orderDTO.getCourierId());
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
+        Assertions.assertFalse(orderDTO.getItems().isEmpty());
+        Assertions.assertNull(orderDTO.getPaymentId());
+        Assertions.assertEquals(orderDTO.getDeliveryAddressId(), TestValues.ADDRESS_ID);
+
+        var itemDTO = orderDTO.getItems()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        Assertions.assertNotNull(itemDTO);
+        Assertions.assertEquals(itemDTO.getItemId(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(itemDTO.getPrice(), TestValues.FIRST_ITEM_PRICE);
+        Assertions.assertEquals(itemDTO.getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
     }
 
     @Test
-    public void test_remove_product_from_order() {
+    public void shouldAddItemToOrder() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
-                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneProduct()));
-        Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
-        Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
+                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneItem()));
 
-        orderService.removeProductFromOrder(TestValues.ORDER_ID, TestValues.FIRST_PRODUCT_ID);
+        var orderDTO = orderService.addItemToOrder(TestApplicationObjectsFactory.newAddItemToOrderCommand());
 
-        Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any(Order.class));
-        Mockito.verify(domainEventPublisher, Mockito.times(1)).publish(ArgumentMatchers.anyList());
-        Assertions.assertNotNull(orderCaptor.getValue());
-        Assertions.assertFalse(domainEventsCaptor.getValue().isEmpty());
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
+        Assertions.assertEquals(2, orderDTO.getItems().size());
+        var secondItem = orderDTO.getItems().stream()
+                .filter(i -> i.getItemId().equals(TestValues.SECOND_ITEM_ID))
+                .findAny()
+                .orElse(null);
+        Assertions.assertNotNull(secondItem);
+        Assertions.assertEquals(secondItem.getItemId(), TestValues.SECOND_ITEM_ID);
+        Assertions.assertEquals(secondItem.getPrice(), TestValues.SECOND_ITEM_PRICE);
+        Assertions.assertEquals(secondItem.getQuantity(), TestValues.SECOND_ITEM_QUANTITY);
     }
 
     @Test
-    public void test_clear_order() {
+    public void shouldRemoveItemFromOrder() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
-                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneProduct()));
-        Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
-        Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
+                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithTwoItems()));
 
-        orderService.clearOrder(TestValues.ORDER_ID);
+        var orderDTO = orderService.removeItemFromOrder(TestValues.ORDER_ID, TestValues.SECOND_ITEM_ID);
 
-        Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any(Order.class));
-        Mockito.verify(domainEventPublisher, Mockito.times(1)).publish(ArgumentMatchers.anyList());
-        Assertions.assertNotNull(orderCaptor.getValue());
-        Assertions.assertFalse(domainEventsCaptor.getValue().isEmpty());
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
+        Assertions.assertEquals(1, orderDTO.getItems().size());
     }
 
     @Test
-    public void test_confirm_order_payment() {
+    public void shouldConfirmPayment() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
-                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneProduct()));
+                .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneItem()));
         Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
@@ -98,13 +120,13 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void test_take_order_in_delivery() {
+    public void shouldTakeOrderInDelivery() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newPendingDeliveryServiceOrder()));
         Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
-        orderService.takeOrderToDelivery(TestApplicationObjectsFactory.newTakeOrderToDeliveryCommand());
+        orderService.takeOrderToDelivery(TestValues.ORDER_ID, TestValues.EMPLOYEE_ID);
 
         Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any(Order.class));
         Mockito.verify(domainEventPublisher, Mockito.times(1)).publish(ArgumentMatchers.anyList());
@@ -113,7 +135,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void test_deliver_order() {
+    public void shouldDeliverOrder() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newPendingForDeliveringOrder()));
         Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
@@ -128,7 +150,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void test_find_delivered_order_by_id() {
+    public void shouldReturnDeliveredOrderById() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newDeliveredOrder()));
 
@@ -138,11 +160,11 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void test_find_orders_for_client() {
+    public void shouldReturnOrdersForClient() {
         Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
                 .thenReturn(Collections.singletonList(TestDomainObjectsFactory.newDeliveredOrder()));
 
-        var orderDTOs = orderService.findPendingProductsOrders(TestValues.CLIENT_ID);
+        var orderDTOs = orderService.findPendingPaymentOrders(TestValues.CLIENT_ID);
 
         Assertions.assertFalse(orderDTOs.isEmpty());
         orderDTOs.forEach(this::assertOrderDTO);
@@ -151,22 +173,22 @@ public class OrderServiceTest {
     private void assertOrderDTO(OrderDTO orderDTO) {
         Assertions.assertNotNull(orderDTO.getOrderId());
         Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
-        AssertionUtil.assertCurrentDateTime(orderDTO.getDeliveredAt());
+        Assertions.assertTrue(orderDTO.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
         Assertions.assertEquals(orderDTO.getStatus(), Order.Status.DELIVERED.name());
-        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_PRODUCT);
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
         Assertions.assertEquals(orderDTO.getCourierId(), TestValues.EMPLOYEE_ID);
-        Assertions.assertFalse(orderDTO.getProducts().isEmpty());
+        Assertions.assertFalse(orderDTO.getItems().isEmpty());
         Assertions.assertEquals(orderDTO.getPaymentId(), TestValues.PAYMENT_ID);
         Assertions.assertEquals(orderDTO.getDeliveryAddressId(), TestValues.ADDRESS_ID);
 
-        var productDTO = orderDTO.getProducts()
+        var itemDTO = orderDTO.getItems()
                 .stream()
                 .findAny()
                 .orElse(null);
-        Assertions.assertNotNull(productDTO);
-        Assertions.assertEquals(productDTO.getProductId(), TestValues.FIRST_PRODUCT_ID);
-        Assertions.assertEquals(productDTO.getPrice(), TestValues.FIRST_PRODUCT_PRICE);
-        Assertions.assertEquals(productDTO.getQuantity(), TestValues.FIRST_PRODUCT_QUANTITY);
+        Assertions.assertNotNull(itemDTO);
+        Assertions.assertEquals(itemDTO.getItemId(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(itemDTO.getPrice(), TestValues.FIRST_ITEM_PRICE);
+        Assertions.assertEquals(itemDTO.getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
     }
 
 }

@@ -1,9 +1,9 @@
 package com.max.tech.ordering.web;
 
 import com.max.tech.ordering.application.OrderService;
+import com.max.tech.ordering.application.dto.AddItemToOrderCommand;
 import com.max.tech.ordering.application.dto.OrderDTO;
 import com.max.tech.ordering.application.dto.PlaceOrderCommand;
-import com.max.tech.ordering.application.dto.TakeOrderToDeliveryCommand;
 import com.max.tech.ordering.web.security.User;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,39 +48,43 @@ public class OrderController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    @ApiOperation(value = "Find pending products orders for client")
-    public List<OrderDTO> findPendingProductsOrdersByClientId(@RequestParam("client_id") String clientId) {
-        return orderService.findPendingProductsOrders(clientId);
+    @ApiOperation(value = "Find pending payment orders for client")
+    public List<OrderDTO> findPendingPaymentOrdersByClientId(@RequestParam("client_id") String clientId) {
+        return orderService.findPendingPaymentOrders(clientId);
     }
 
     @PutMapping(value = "/{orderId}/payment/{paymentId}")
     @ApiOperation(value = "Confirm order payment")
-    public ResponseEntity<Void> confirmPayment(@PathVariable String orderId, @PathVariable String paymentId){
+    public ResponseEntity<Void> confirmPayment(@PathVariable String orderId, @PathVariable String paymentId) {
         orderService.confirmOrderPayment(orderId, paymentId);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping(value = "/{orderId}/products/{productId}")
-    @ApiOperation(value = "Remove product from order")
-    public ResponseEntity<Void> removeProductFromOrder(@PathVariable String orderId,
-                                                       @PathVariable String productId) {
-        orderService.removeProductFromOrder(orderId, productId);
-        return ResponseEntity.noContent().build();
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping(value = "/{orderId}/items")
+    @ApiOperation(value = "Add item to order")
+    public OrderDTO addItemToOrder(@PathVariable String orderId,
+                                   @RequestBody @Valid AddItemToOrderCommand command) {
+        command.setOrderId(orderId);
+        var orderDTO = orderService.addItemToOrder(command);
+        HypermediaUtil.addLinks(orderDTO);
+        return orderDTO;
     }
 
-    @DeleteMapping(value = "/{orderId}")
-    @ApiOperation(value = "Remove all products from order")
-    public ResponseEntity<Void> clearOrder(@PathVariable String orderId) {
-        orderService.clearOrder(orderId);
-        return ResponseEntity.noContent().build();
+    @ResponseStatus(HttpStatus.OK)
+    @DeleteMapping(value = "/{orderId}/items/{itemId}")
+    @ApiOperation(value = "Remove item from order")
+    public OrderDTO removeItemFromOrder(@PathVariable String orderId,
+                                        @PathVariable String itemId) {
+        var orderDTO = orderService.removeItemFromOrder(orderId, itemId);
+        HypermediaUtil.addLinks(orderDTO);
+        return orderDTO;
     }
 
     @PostMapping(value = "/{orderId}/delivery")
     @ApiOperation(value = "Take order in delivery")
     public ResponseEntity<Void> takeOrderInDelivery(@PathVariable String orderId) {
-        orderService.takeOrderToDelivery(
-                new TakeOrderToDeliveryCommand(orderId, extractClientId())
-        );
+        orderService.takeOrderToDelivery(orderId, extractClientId());
         return ResponseEntity.noContent().build();
     }
 

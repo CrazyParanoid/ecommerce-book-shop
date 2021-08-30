@@ -16,8 +16,6 @@ public class User {
 
     @AllArgsConstructor
     public static class Role implements GrantedAuthority {
-        public final static String ADMIN_ROLE = "ADMIN";
-
         private final String value;
 
         @Override

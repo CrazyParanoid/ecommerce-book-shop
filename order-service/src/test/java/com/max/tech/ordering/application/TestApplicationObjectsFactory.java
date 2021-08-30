@@ -2,7 +2,7 @@ package com.max.tech.ordering.application;
 
 import com.max.tech.ordering.application.dto.*;
 import com.max.tech.ordering.domain.Order;
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.helper.TestValues;
 import lombok.experimental.UtilityClass;
 
 import java.util.Collections;
@@ -16,19 +16,41 @@ public class TestApplicationObjectsFactory {
                 TestValues.CLIENT_ID,
                 TestValues.ADDRESS_ID,
                 Collections.singletonList(
-                        new ProductDTO(
-                                TestValues.FIRST_PRODUCT_ID,
-                                TestValues.FIRST_PRODUCT_PRICE,
-                                TestValues.FIRST_PRODUCT_QUANTITY
+                        new OrderItemDTO(
+                                TestValues.FIRST_ITEM_ID,
+                                TestValues.FIRST_ITEM_PRICE,
+                                TestValues.FIRST_ITEM_QUANTITY
                         )
                 )
         );
     }
 
-    public TakeOrderToDeliveryCommand newTakeOrderToDeliveryCommand() {
-        return new TakeOrderToDeliveryCommand(
+    public AddItemToOrderCommand newAddItemToOrderCommand() {
+        return new AddItemToOrderCommand(
                 TestValues.ORDER_ID,
-                TestValues.EMPLOYEE_ID
+                TestValues.SECOND_ITEM_ID,
+                TestValues.SECOND_ITEM_PRICE,
+                TestValues.SECOND_ITEM_QUANTITY
+        );
+    }
+
+    public OrderDTO newOrderDTOWithOneItem() {
+        return new OrderDTO(
+                TestValues.ORDER_ID,
+                Order.Status.PENDING_PAYMENT.name(),
+                TestValues.CLIENT_ID,
+                TestValues.EMPLOYEE_ID,
+                null,
+                TestValues.ORDER_TOTAL_PRICE,
+                null,
+                TestValues.ADDRESS_ID,
+                Set.of(
+                        new OrderItemDTO(
+                                TestValues.FIRST_ITEM_ID,
+                                TestValues.FIRST_ITEM_PRICE,
+                                TestValues.FIRST_ITEM_QUANTITY
+                        )
+                )
         );
     }
 
@@ -43,10 +65,15 @@ public class TestApplicationObjectsFactory {
                 null,
                 TestValues.ADDRESS_ID,
                 Set.of(
-                        new ProductDTO(
-                                TestValues.FIRST_PRODUCT_ID,
-                                TestValues.FIRST_PRODUCT_PRICE,
-                                TestValues.FIRST_PRODUCT_QUANTITY
+                        new OrderItemDTO(
+                                TestValues.FIRST_ITEM_ID,
+                                TestValues.FIRST_ITEM_PRICE,
+                                TestValues.FIRST_ITEM_QUANTITY
+                        ),
+                        new OrderItemDTO(
+                                TestValues.SECOND_ITEM_ID,
+                                TestValues.SECOND_ITEM_PRICE,
+                                TestValues.SECOND_ITEM_QUANTITY
                         )
                 )
         );

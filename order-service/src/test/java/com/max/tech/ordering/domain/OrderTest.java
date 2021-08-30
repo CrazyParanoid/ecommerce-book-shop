@@ -3,22 +3,21 @@ package com.max.tech.ordering.domain;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.payment.PaymentId;
 import com.max.tech.ordering.domain.person.PersonId;
-import com.max.tech.ordering.domain.product.Product;
-import com.max.tech.ordering.domain.product.ProductId;
-import com.max.tech.ordering.util.AssertionUtil;
-import com.max.tech.ordering.util.TestValues;
+import com.max.tech.ordering.domain.item.OrderItem;
+import com.max.tech.ordering.domain.item.OrderItemId;
+import com.max.tech.ordering.helper.TestValues;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class OrderTest {
 
     @Test
-    public void test_place_order() {
+    public void shouldPlaceOrder() {
         var order = TestDomainObjectsFactory.newOrder();
         var orderPlacedDomainEvent = getDomainEventByType(order, OrderPlaced.class);
 
@@ -27,12 +26,12 @@ public class OrderTest {
     }
 
     private void assertNewOrder(Order order) {
-        var products = order.getProducts();
-        Assertions.assertNotNull(products);
+        var items = order.getItems();
+        Assertions.assertNotNull(items);
         Assertions.assertNull(order.getPaymentId());
         Assertions.assertNull(order.getCourierId());
         Assertions.assertNull(order.getDeliveredAt());
-        Assertions.assertTrue(products.isEmpty());
+        Assertions.assertTrue(items.isEmpty());
         Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_PAYMENT);
         Assertions.assertNotNull(order.getOrderId());
         Assertions.assertEquals(order.getPersonId().toString(), TestValues.CLIENT_ID);
@@ -47,195 +46,152 @@ public class OrderTest {
     }
 
     @Test
-    public void test_add_one_product_to_order() {
+    public void shouldAddItemToOrder() {
         var order = TestDomainObjectsFactory.newOrder();
 
-        order.addProduct(
-                ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                Amount.fromValue(TestValues.FIRST_PRODUCT_PRICE),
-                TestValues.FIRST_PRODUCT_QUANTITY
+        order.addItem(
+                OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                Amount.fromValue(TestValues.FIRST_ITEM_PRICE),
+                TestValues.FIRST_ITEM_QUANTITY
         );
 
-        assertOrderWithOneProduct(order);
-        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_PRODUCT);
+        assertOrderWithOneItem(order);
+        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
     }
 
     @Test
-    public void test_add_product_with_zero_quantity() {
+    public void shouldThrowExceptionDuringAddingItemWithZeroQuantity() {
         var order = TestDomainObjectsFactory.newOrder();
 
         Assertions.assertThrows(IllegalArgumentException.class,
-                () -> order.addProduct(
-                        ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                        Amount.fromValue(TestValues.FIRST_PRODUCT_PRICE),
+                () -> order.addItem(
+                        OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                        Amount.fromValue(TestValues.FIRST_ITEM_PRICE),
                         0
                 ),
-                "Quantity must be greater than 0");
+                "Illegal quantity 0. Quantity must be greater than 0");
     }
 
     @Test
-    public void test_add_product_with_zero_price() {
+    public void shouldThrowExceptionDuringAddingItemWithZeroPrice() {
         var order = TestDomainObjectsFactory.newOrder();
 
         Assertions.assertThrows(IllegalArgumentException.class,
-                () -> order.addProduct(
-                        ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
+                () -> order.addItem(
+                        OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
                         Amount.ZERO_AMOUNT,
-                        TestValues.FIRST_PRODUCT_QUANTITY
+                        TestValues.FIRST_ITEM_QUANTITY
                 ),
-                "Price must be greater than 0");
+                "Illegal price 0. Price must be greater than 0");
     }
 
-    private void assertOrderWithOneProduct(Order order) {
-        var domainEvent = getDomainEventByType(order, ProductAddedToOrder.class);
-        var product = order.findProductById(ProductId.fromValue(TestValues.FIRST_PRODUCT_ID));
+    private void assertOrderWithOneItem(Order order) {
+        var domainEvent = getDomainEventByType(order, OrderItemAdded.class);
+        var item = order.findItemById(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID));
 
-        assertProduct(product, TestValues.FIRST_PRODUCT_ID,
-                TestValues.FIRST_PRODUCT_PRICE,
-                TestValues.FIRST_PRODUCT_QUANTITY);
-        assertProductAddedToOrderDomainEvent(domainEvent, TestValues.FIRST_PRODUCT_ID,
-                TestValues.TOTAL_ORDER_PRICE_WITH_ONE_PRODUCT,
-                TestValues.FIRST_PRODUCT_QUANTITY);
+        assertItem(item,
+                TestValues.FIRST_ITEM_ID,
+                TestValues.FIRST_ITEM_PRICE,
+                TestValues.FIRST_ITEM_QUANTITY);
+        assertOrderItemAddedDomainEvent(domainEvent,
+                TestValues.FIRST_ITEM_ID,
+                TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM,
+                TestValues.FIRST_ITEM_QUANTITY);
     }
 
     @Test
-    public void test_add_two_products_to_order() {
+    public void shouldAddTwoItemsToOrder() {
         var order = TestDomainObjectsFactory.newOrder();
 
-        order.addProduct(
-                ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                Amount.fromValue(TestValues.FIRST_PRODUCT_PRICE),
-                TestValues.FIRST_PRODUCT_QUANTITY
+        order.addItem(
+                OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                Amount.fromValue(TestValues.FIRST_ITEM_PRICE),
+                TestValues.FIRST_ITEM_QUANTITY
         );
-        order.addProduct(
-                ProductId.fromValue(TestValues.SECOND_PRODUCT_ID),
-                Amount.fromValue(TestValues.SECOND_PRODUCT_PRICE),
-                TestValues.SECOND_PRODUCT_QUANTITY
+        order.addItem(
+                OrderItemId.fromValue(TestValues.SECOND_ITEM_ID),
+                Amount.fromValue(TestValues.SECOND_ITEM_PRICE),
+                TestValues.SECOND_ITEM_QUANTITY
         );
 
-        assertOrderWithTwoProducts(order);
-        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_PRODUCTS);
+        assertOrderWithTwoItems(order);
+        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
     }
 
-    @Test
-    public void test_update_existed_product() {
-        var order = TestDomainObjectsFactory.newOrderWithOneProduct();
+    private void assertOrderWithTwoItems(Order order) {
+        var domainEvents = getDomainEventsByType(order, OrderItemAdded.class);
+        var firstItem = order.findItemById(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID));
+        var secondItem = order.findItemById(OrderItemId.fromValue(TestValues.SECOND_ITEM_ID));
 
-        order.addProduct(
-                ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                Amount.fromValue(TestValues.SECOND_PRODUCT_PRICE),
-                TestValues.SECOND_PRODUCT_QUANTITY
-        );
-        var product = order.findProductById(ProductId.fromValue(TestValues.FIRST_PRODUCT_ID));
+        assertItem(firstItem, TestValues.FIRST_ITEM_ID,
+                TestValues.FIRST_ITEM_PRICE,
+                TestValues.FIRST_ITEM_QUANTITY);
+        assertItem(secondItem, TestValues.SECOND_ITEM_ID,
+                TestValues.SECOND_ITEM_PRICE,
+                TestValues.SECOND_ITEM_QUANTITY);
 
-        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_UPDATED_ONE_PRODUCT);
-        assertProduct(product, TestValues.FIRST_PRODUCT_ID,
-                TestValues.SECOND_PRODUCT_PRICE,
-                TestValues.SECOND_PRODUCT_QUANTITY);
+        assertOrderItemAddedDomainEvent(domainEvents.get(0), TestValues.FIRST_ITEM_ID,
+                TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM,
+                TestValues.FIRST_ITEM_QUANTITY);
+        assertOrderItemAddedDomainEvent(domainEvents.get(1), TestValues.SECOND_ITEM_ID,
+                TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS,
+                TestValues.SECOND_ITEM_QUANTITY);
     }
 
-    private void assertOrderWithTwoProducts(Order order) {
-        var domainEvents = getDomainEventsByType(order, ProductAddedToOrder.class);
-        var firstProduct = order.findProductById(ProductId.fromValue(TestValues.FIRST_PRODUCT_ID));
-        var secondProduct = order.findProductById(ProductId.fromValue(TestValues.SECOND_PRODUCT_ID));
-
-        assertProduct(firstProduct, TestValues.FIRST_PRODUCT_ID,
-                TestValues.FIRST_PRODUCT_PRICE,
-                TestValues.FIRST_PRODUCT_QUANTITY);
-        assertProduct(secondProduct, TestValues.SECOND_PRODUCT_ID,
-                TestValues.SECOND_PRODUCT_PRICE,
-                TestValues.SECOND_PRODUCT_QUANTITY);
-
-        assertProductAddedToOrderDomainEvent(domainEvents.get(0), TestValues.FIRST_PRODUCT_ID,
-                TestValues.TOTAL_ORDER_PRICE_WITH_ONE_PRODUCT,
-                TestValues.FIRST_PRODUCT_QUANTITY);
-        assertProductAddedToOrderDomainEvent(domainEvents.get(1), TestValues.SECOND_PRODUCT_ID,
-                TestValues.TOTAL_ORDER_PRICE_WITH_TWO_PRODUCTS,
-                TestValues.SECOND_PRODUCT_QUANTITY);
+    private void assertItem(OrderItem orderItem, String itemId, BigDecimal amount, Integer quantity) {
+        Assertions.assertNotNull(orderItem);
+        Assertions.assertEquals(orderItem.itemId().toString(), itemId);
+        Assertions.assertEquals(orderItem.price().getValue(), amount);
+        Assertions.assertEquals(orderItem.quantity(), quantity);
     }
 
-    private void assertProduct(Product product, String productId, BigDecimal amount, Integer quantity) {
-        Assertions.assertNotNull(product);
-        Assertions.assertEquals(product.getProductId().toString(), productId);
-        Assertions.assertEquals(product.getPrice().getValue(), amount);
-        Assertions.assertEquals(product.getQuantity(), quantity);
-    }
-
-    private void assertProductAddedToOrderDomainEvent(ProductAddedToOrder domainEvent, String productId,
-                                                      BigDecimal amount, Integer quantity) {
-        Assertions.assertEquals(domainEvent.getProductId(), productId);
+    private void assertOrderItemAddedDomainEvent(OrderItemAdded domainEvent, String itemId,
+                                                 BigDecimal amount, Integer quantity) {
+        Assertions.assertEquals(domainEvent.getItemId(), itemId);
         Assertions.assertEquals(domainEvent.getTotalPrice(), amount);
         Assertions.assertEquals(domainEvent.getQuantity(), quantity);
         Assertions.assertNotNull(domainEvent.getOrderId());
     }
 
     @Test
-    public void test_add_product_to_delivered_order() {
+    public void shouldThrowExceptionDuringAddingItemIfOrderDelivered() {
         var order = TestDomainObjectsFactory.newDeliveredOrder();
 
         Assertions.assertThrows(IllegalStateException.class,
-                () -> order.addProduct(
-                        ProductId.fromValue(TestValues.FIRST_PRODUCT_ID),
-                        Amount.fromValue(TestValues.FIRST_PRODUCT_PRICE),
-                        TestValues.FIRST_PRODUCT_QUANTITY
+                () -> order.addItem(
+                        OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                        Amount.fromValue(TestValues.FIRST_ITEM_PRICE),
+                        TestValues.FIRST_ITEM_QUANTITY
                 ),
-                "Wrong invocation for current state");
+                "Wrong invocation for current state: expected PENDING_PAYMENT, but actual DELIVERED");
     }
 
     @Test
-    public void test_remove_product_from_order() {
-        var order = TestDomainObjectsFactory.newOrderWithOneProduct();
+    public void shouldRemoveItemFromOrder() {
+        var order = TestDomainObjectsFactory.newOrderWithTwoItems();
 
-        order.removeProduct(ProductId.fromValue(TestValues.FIRST_PRODUCT_ID));
-        var domainEvent = getDomainEventByType(order, ProductRemovedFromOrder.class);
+        order.removeItem(OrderItemId.fromValue(TestValues.SECOND_ITEM_ID));
+        var domainEvent = getDomainEventByType(order, OrderItemRemoved.class);
 
-        assertProductRemovedFromOrderDomainEvent(domainEvent);
-        Assertions.assertTrue(order.getProducts().isEmpty());
-        Assertions.assertEquals(order.getTotalPrice(), Amount.ZERO_AMOUNT);
-    }
-
-    @Test
-    public void test_remove_product_from_order_with_discount() {
-        var order = TestDomainObjectsFactory.newOrderWithDiscount();
-
-        order.removeProduct(ProductId.fromValue(TestValues.FIRST_PRODUCT_ID));
-        var domainEvent = getDomainEventByType(order, ProductRemovedFromOrder.class);
-
-        assertProductRemovedFromOrderDomainEvent(domainEvent);
-        Assertions.assertTrue(order.getProducts().isEmpty());
-        Assertions.assertEquals(order.getTotalPrice(), Amount.ZERO_AMOUNT);
-    }
-
-    private void assertProductRemovedFromOrderDomainEvent(ProductRemovedFromOrder domainEvent) {
         Assertions.assertNotNull(domainEvent.getOrderId());
-        Assertions.assertEquals(domainEvent.getProductId(), TestValues.FIRST_PRODUCT_ID);
-        Assertions.assertEquals(domainEvent.getTotalPrice(), Amount.ZERO_AMOUNT.getValue());
+        Assertions.assertEquals(domainEvent.getItemId(), TestValues.SECOND_ITEM_ID);
+        Assertions.assertEquals(domainEvent.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
+        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
     }
 
     @Test
-    public void test_remove_product_from_empty_order() {
+    public void shouldThrowExceptionDuringRemovingItemIfItemsEmpty() {
         var order = TestDomainObjectsFactory.newOrder();
 
         Assertions.assertThrows(IllegalStateException.class,
-                () -> order.removeProduct(ProductId.fromValue(TestValues.FIRST_PRODUCT_ID)),
-                "Order products can't be empty");
+                () -> order.removeItem(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID)),
+                "Item with id 7417d778-fabe-4a90-ad93-3dfb74c51608 can't be deleted. " +
+                        "Order items can't be empty");
     }
 
     @Test
-    public void test_clear_order() {
-        var order = TestDomainObjectsFactory.newOrderWithOneProduct();
-
-        order.clearProducts();
-        var domainEvent = getDomainEventByType(order, OrderCleaned.class);
-
-        Assertions.assertNotNull(domainEvent);
-        Assertions.assertNotNull(domainEvent.getOrderId());
-        Assertions.assertTrue(order.getProducts().isEmpty());
-    }
-
-    @Test
-    public void test_confirm_order_payment() {
-        var order = TestDomainObjectsFactory.newOrderWithOneProduct();
+    public void shouldConfirmPayment() {
+        var order = TestDomainObjectsFactory.newOrderWithOneItem();
 
         order.confirmPayment(new PaymentId(TestValues.PAYMENT_ID));
         var domainEvent = getDomainEventByType(order, OrderPaid.class);
@@ -247,16 +203,16 @@ public class OrderTest {
     }
 
     @Test
-    public void test_send_empty_order_to_delivery_service() {
+    public void shouldThrowExceptionDuringPaymentConfirmationIfItemsEmpty() {
         var order = TestDomainObjectsFactory.newOrder();
 
         Assertions.assertThrows(IllegalStateException.class,
                 () -> order.confirmPayment(new PaymentId(TestValues.PAYMENT_ID)),
-                "Order products can't be empty");
+                "Payment can't be confirmed. Order items can't be empty");
     }
 
     @Test
-    public void test_take_order_in_delivery() {
+    public void shouldTakeOrderInDelivery() {
         var order = TestDomainObjectsFactory.newPendingDeliveryServiceOrder();
 
         order.takeInDelivery(PersonId.fromValue(TestValues.EMPLOYEE_ID));
@@ -274,26 +230,21 @@ public class OrderTest {
     }
 
     @Test
-    public void test_deliver_order() {
+    public void shouldDeliverOrder() {
         var order = TestDomainObjectsFactory.newPendingForDeliveringOrder();
 
         order.deliver();
         var domainEvent = getDomainEventByType(order, OrderDelivered.class);
 
         assertOrderDeliveredDomainEvent(domainEvent);
-        AssertionUtil.assertCurrentDateTime(order.getDeliveredAt());
+        Assertions.assertTrue(order.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
         Assertions.assertEquals(order.getStatus(), Order.Status.DELIVERED);
     }
 
     private void assertOrderDeliveredDomainEvent(OrderDelivered domainEvent) {
-        var productsQuantitiesMap = domainEvent.getProductsQuantities();
         Assertions.assertNotNull(domainEvent);
         Assertions.assertNotNull(domainEvent.getOrderId());
-        AssertionUtil.assertCurrentDateTime(domainEvent.getDeliveredAt());
-        var productIds = productsQuantitiesMap.keySet();
-        var productId = UUID.fromString(TestValues.FIRST_PRODUCT_ID);
-        Assertions.assertTrue(productIds.contains(productId));
-        Assertions.assertEquals(TestValues.FIRST_PRODUCT_QUANTITY, productsQuantitiesMap.get(productId));
+        Assertions.assertTrue(domainEvent.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
     }
 
     private <T extends DomainEvent> T getDomainEventByType(Order order, Class<T> clazz) {

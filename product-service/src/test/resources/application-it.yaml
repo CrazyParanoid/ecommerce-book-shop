@@ -13,5 +13,5 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8081/auth/realms/car_park/protocol/openid-connect/certs}
-          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8081/auth/realms/car_park}
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8081/auth/realms/test/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8081/auth/realms/test}

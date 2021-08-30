@@ -1,9 +1,9 @@
 package com.max.tech.ordering.application;
 
 import com.max.tech.ordering.application.dto.OrderDTO;
-import com.max.tech.ordering.application.dto.ProductDTO;
+import com.max.tech.ordering.application.dto.OrderItemDTO;
 import com.max.tech.ordering.domain.Order;
-import com.max.tech.ordering.domain.product.Product;
+import com.max.tech.ordering.domain.item.OrderItem;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -29,21 +29,21 @@ public class OrderAssembler {
         Optional.ofNullable(order.getCourierId()).ifPresent(c -> orderDTO.setCourierId(c.toString()));
         Optional.ofNullable(order.getPaymentId()).ifPresent(p -> orderDTO.setPaymentId(p.toString()));
 
-        writeProducts(orderDTO, order.getProducts());
+        writeItems(orderDTO, order.getItems());
         return orderDTO;
     }
 
-    private void writeProducts(OrderDTO orderDTO, Set<Product> products) {
-        var productDTOs = products.stream().map(
-                        p -> new ProductDTO(
-                                p.getProductId().toString(),
-                                p.getPrice().getValue(),
-                                p.getQuantity()
+    private void writeItems(OrderDTO orderDTO, Set<OrderItem> orderItems) {
+        var itemDTOs = orderItems.stream().map(
+                        p -> new OrderItemDTO(
+                                p.itemId().toString(),
+                                p.price().getValue(),
+                                p.quantity()
                         )
                 )
                 .collect(Collectors.toSet());
 
-        orderDTO.setProducts(productDTOs);
+        orderDTO.setItems(itemDTOs);
     }
 
 }

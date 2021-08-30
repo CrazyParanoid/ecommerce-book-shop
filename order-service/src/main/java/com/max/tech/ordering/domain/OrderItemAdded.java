@@ -1,16 +1,16 @@
 package com.max.tech.ordering.domain;
 
 import com.max.tech.ordering.domain.common.DomainEvent;
-import com.max.tech.ordering.domain.product.ProductId;
+import com.max.tech.ordering.domain.item.OrderItemId;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 
 @AllArgsConstructor
-public class ProductAddedToOrder implements DomainEvent {
+public class OrderItemAdded implements DomainEvent {
     private OrderId orderId;
-    private ProductId productId;
+    private OrderItemId itemId;
     @Getter
     private Integer quantity;
     private Amount totalPrice;
@@ -19,8 +19,8 @@ public class ProductAddedToOrder implements DomainEvent {
         return this.orderId.toString();
     }
 
-    public String getProductId(){
-        return this.productId.toString();
+    public String getItemId(){
+        return this.itemId.toString();
     }
 
     public BigDecimal getTotalPrice(){

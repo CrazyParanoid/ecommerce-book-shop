@@ -58,4 +58,10 @@ public class Amount implements ValueObject {
     public int hashCode() {
         return this.value.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return this.value.toString();
+    }
+
 }

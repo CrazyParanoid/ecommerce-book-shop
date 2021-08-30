@@ -1,6 +1,5 @@
 package com.max.tech.ordering.application.dto;
 
-import com.max.tech.ordering.application.Json;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -17,7 +16,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(description = "Order with products")
+@ApiModel(description = "Order with items")
 public class OrderDTO extends RepresentationModel<OrderDTO> implements Json {
     @ApiModelProperty(value = "Order id", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     private String orderId;
@@ -35,8 +34,8 @@ public class OrderDTO extends RepresentationModel<OrderDTO> implements Json {
     private String paymentId;
     @ApiModelProperty(value = "Delivery address id", accessMode = ApiModelProperty.AccessMode.READ_ONLY, position = 7)
     private String deliveryAddressId;
-    @ApiModelProperty(value = "Product list", accessMode = ApiModelProperty.AccessMode.READ_ONLY, position = 8)
-    private Set<ProductDTO> products;
+    @ApiModelProperty(value = "Item list", accessMode = ApiModelProperty.AccessMode.READ_ONLY, position = 8)
+    private Set<OrderItemDTO> items;
 
     public OrderDTO(String orderId, String status, String clientId, String deliveryAddressId,
                     LocalDateTime deliveredAt, BigDecimal totalPrice) {

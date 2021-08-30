@@ -1,7 +1,6 @@
 package com.max.tech.ordering.application.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.max.tech.ordering.application.Json;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -22,7 +21,7 @@ public class PlaceOrderCommand implements Json {
     @NotEmpty(message = "delivery_address_id can't be null or empty")
     @ApiModelProperty(value = "delivery address id", required = true)
     private String deliveryAddressId;
-    @NotEmpty(message = "products can't be null or empty")
-    @ApiModelProperty(value = "Selected products", required = true, position = 1)
-    private List<@Valid ProductDTO> products;
+    @NotEmpty(message = "items can't be null or empty")
+    @ApiModelProperty(value = "Selected items", required = true, position = 1)
+    private List<@Valid OrderItemDTO> items;
 }

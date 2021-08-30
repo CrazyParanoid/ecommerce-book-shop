@@ -47,10 +47,9 @@ public class ProductRestAPITest {
 
     @Test
     @SneakyThrows
-    public void test_post_new_product() {
+    public void shouldPostNewProduct() {
         var actualResponse = postProduct();
 
-        System.out.println(actualResponse);
         var expectedResponse = getResponse("classpath:json/product_response.json");
         JSONAssert.assertEquals(
                 expectedResponse, actualResponse,
