@@ -100,7 +100,6 @@ public class Order extends AggregateRoot {
     }
 
     private void updateExistedOrderItem(OrderItem item, Integer quantity) {
-        reduceTotalPrice(item);
         item.update(quantity);
         calculateTotalPrice(item);
 
@@ -115,13 +114,17 @@ public class Order extends AggregateRoot {
     }
 
     private void calculateTotalPrice(OrderItem item) {
-        this.totalPrice = this.totalPrice.add(
-                item.price().multiply(Double.valueOf(item.quantity()))
-        );
-        if (this.totalPrice.greaterOrEquals(DISCOUNT_THRESHOLD)) {
-            var discountValue = this.totalPrice.multiply(DISCOUNT_PERCENTAGE / 100);
-            this.totalPrice = this.totalPrice.subtract(discountValue);
-        }
+        var totalPriceWithoutDiscount = this.items.stream()
+                .map(OrderItem::totalPrice)
+                .reduce(Amount::add)
+                .orElseThrow(() -> new IllegalStateException("Impossible to reduce total price. " +
+                        "Total price without discount can't be empty"));
+
+        if (totalPriceWithoutDiscount.greaterOrEquals(DISCOUNT_THRESHOLD)) {
+            var discountValue = totalPriceWithoutDiscount.multiply(DISCOUNT_PERCENTAGE / 100);
+            this.totalPrice = totalPriceWithoutDiscount.subtract(discountValue);
+        } else
+            this.totalPrice = totalPriceWithoutDiscount;
     }
 
     public void removeItem(OrderItemId itemId) {
@@ -136,24 +139,10 @@ public class Order extends AggregateRoot {
 
         var item = findItemById(itemId);
 
-        reduceTotalPrice(item);
         this.items.remove(item);
         calculateTotalPrice(item);
 
         raiseDomainEvent(new OrderItemRemoved(this.orderId, itemId, this.totalPrice));
-    }
-
-    private void reduceTotalPrice(OrderItem orderItem) {
-        var totalPriceWithoutDiscount = this.items.stream()
-                .map(OrderItem::totalPrice)
-                .reduce(Amount::add)
-                .orElseThrow(() -> new IllegalStateException("Impossible to reduce total price. " +
-                        "Total price without discount can't be empty"));
-
-        if (totalPriceWithoutDiscount.greaterOrEquals(DISCOUNT_THRESHOLD))
-            this.totalPrice = totalPriceWithoutDiscount;
-
-        this.totalPrice = this.totalPrice.subtract(orderItem.totalPrice());
     }
 
     public void confirmPayment(PaymentId paymentId) {

@@ -100,7 +100,7 @@ public class OrderServiceTest {
 
         var orderDTO = orderService.removeItemFromOrder(TestValues.ORDER_ID, TestValues.SECOND_ITEM_ID);
 
-        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
+        Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
         Assertions.assertEquals(1, orderDTO.getItems().size());
     }
 

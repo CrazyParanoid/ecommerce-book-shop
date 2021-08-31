@@ -175,8 +175,8 @@ public class OrderTest {
 
         Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertEquals(domainEvent.getItemId(), TestValues.SECOND_ITEM_ID);
-        Assertions.assertEquals(domainEvent.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
-        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
+        Assertions.assertEquals(domainEvent.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
+        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
     }
 
     @Test
