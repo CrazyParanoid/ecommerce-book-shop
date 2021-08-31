@@ -90,7 +90,7 @@ public class Order extends AggregateRoot {
         item.validate();
 
         this.items.add(item);
-        calculateTotalPrice(item);
+        calculateTotalPrice();
 
         raiseDomainEvent(new OrderItemAdded(
                 this.orderId,
@@ -101,7 +101,7 @@ public class Order extends AggregateRoot {
 
     private void updateExistedOrderItem(OrderItem item, Integer quantity) {
         item.update(quantity);
-        calculateTotalPrice(item);
+        calculateTotalPrice();
 
         raiseDomainEvent(
                 new OrderItemUpdated(
@@ -113,7 +113,7 @@ public class Order extends AggregateRoot {
         );
     }
 
-    private void calculateTotalPrice(OrderItem item) {
+    private void calculateTotalPrice() {
         var totalPriceWithoutDiscount = this.items.stream()
                 .map(OrderItem::totalPrice)
                 .reduce(Amount::add)
@@ -140,7 +140,7 @@ public class Order extends AggregateRoot {
         var item = findItemById(itemId);
 
         this.items.remove(item);
-        calculateTotalPrice(item);
+        calculateTotalPrice();
 
         raiseDomainEvent(new OrderItemRemoved(this.orderId, itemId, this.totalPrice));
     }
