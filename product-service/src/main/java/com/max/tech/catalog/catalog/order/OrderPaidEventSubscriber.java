@@ -1,7 +1,5 @@
-package com.max.tech.catalog.catalog.events.order;
+package com.max.tech.catalog.catalog.order;
 
-import com.max.tech.catalog.catalog.events.EventSubscriber;
-import com.max.tech.catalog.catalog.events.InputBindings;
 import com.max.tech.catalog.catalog.product.ProductRepository;
 import com.max.tech.catalog.catalog.web.User;
 import com.max.tech.catalog.catalog.web.UserAuthentication;
@@ -12,32 +10,32 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
-public class OrderDeliveredEventSubscriber implements EventSubscriber<OrderDelivered> {
+public class OrderPaidEventSubscriber {
     private final ProductRepository productRepository;
 
-    public OrderDeliveredEventSubscriber(ProductRepository productRepository) {
+    public OrderPaidEventSubscriber(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
-    @Override
     @Transactional
     @StreamListener(
             target = InputBindings.OrderChannel,
-            condition = "headers['type']=='OrderDelivered'"
+            condition = "headers['type']=='OrderPaid'"
     )
-    public void onEvent(OrderDelivered event) {
-        log.info("OrderDelivered event has been received");
+    public void onEvent(OrderPaidEvent event) {
+        log.info("OrderPaid event has been received");
         authorizeAsAdmin();
 
-        event.getProductsQuantities().forEach((id, quantity) -> {
-            var optionalProduct = productRepository.findById(id);
+        event.getItems().forEach(item -> {
+            var optionalProduct = productRepository.findById(UUID.fromString(item.getItemId()));
 
             if (optionalProduct.isPresent()) {
                 var product = optionalProduct.get();
-                product.reduceQuantity(quantity);
+                product.reduceQuantity(item.getQuantity());
 
                 productRepository.save(product);
                 log.info("Product with id {} has been updated", product.getId());

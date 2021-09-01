@@ -106,20 +106,20 @@ public class OrderControllerAPITest {
     }
 
     @Test
-    public void shouldPostDelivery() {
+    public void shouldPostCourier() {
         Mockito.doNothing().when(orderService)
-                .takeOrderToDelivery(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
+                .assignCourierToOrder(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
 
-        var actualResponse = postDelivery();
+        var actualResponse = postCourier();
 
         Assertions.assertTrue(actualResponse.isBlank());
     }
 
     @SneakyThrows
-    private String postDelivery() {
+    private String postCourier() {
         return mockMvc.perform(
                         MockMvcRequestBuilders.post(
-                                        "/api/v1/orders/{orderId}/delivery",
+                                        "/api/v1/orders/{orderId}/courier",
                                         TestValues.ORDER_ID
                                 )
                                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + WebUtil.createToken())
@@ -131,18 +131,18 @@ public class OrderControllerAPITest {
     }
 
     @Test
-    public void shouldPatchDelivery() {
+    public void shouldPostDelivery() {
         Mockito.doNothing().when(orderService).deliverOrder(ArgumentMatchers.anyString());
 
-        var actualResponse = patchDelivery();
+        var actualResponse = postDelivery();
 
         Assertions.assertTrue(actualResponse.isBlank());
     }
 
     @SneakyThrows
-    private String patchDelivery() {
+    private String postDelivery() {
         return mockMvc.perform(
-                        MockMvcRequestBuilders.patch(
+                        MockMvcRequestBuilders.post(
                                         "/api/v1/orders/{orderId}/delivery",
                                         TestValues.ORDER_ID
                                 )

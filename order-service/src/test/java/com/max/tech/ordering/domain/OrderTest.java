@@ -196,7 +196,7 @@ public class OrderTest {
         order.confirmPayment(new PaymentId(TestValues.PAYMENT_ID));
         var domainEvent = getDomainEventByType(order, OrderPaid.class);
 
-        Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_DELIVERY_SERVICE);
+        Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_COURIER_ASSIGMENT);
         Assertions.assertNotNull(domainEvent);
         Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertEquals(domainEvent.getPaymentId().toString(), TestValues.PAYMENT_ID);
@@ -212,18 +212,18 @@ public class OrderTest {
     }
 
     @Test
-    public void shouldTakeOrderInDelivery() {
+    public void shouldAssignCourier() {
         var order = TestDomainObjectsFactory.newPendingDeliveryServiceOrder();
 
-        order.takeInDelivery(PersonId.fromValue(TestValues.EMPLOYEE_ID));
-        var domainEvent = getDomainEventByType(order, OrderTookInDelivery.class);
+        order.assignCourier(PersonId.fromValue(TestValues.EMPLOYEE_ID));
+        var domainEvent = getDomainEventByType(order, OrderCourierAssigned.class);
 
         Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_FOR_DELIVERING);
         Assertions.assertEquals(order.getCourierId().toString(), TestValues.EMPLOYEE_ID);
         assertOrderTookInDeliveryDomainEvent(domainEvent);
     }
 
-    private void assertOrderTookInDeliveryDomainEvent(OrderTookInDelivery domainEvent) {
+    private void assertOrderTookInDeliveryDomainEvent(OrderCourierAssigned domainEvent) {
         Assertions.assertNotNull(domainEvent);
         Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertEquals(domainEvent.getCourierId(), TestValues.EMPLOYEE_ID);

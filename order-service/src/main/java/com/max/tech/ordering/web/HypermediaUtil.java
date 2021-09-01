@@ -63,8 +63,8 @@ public class HypermediaUtil {
     private void addPutDeliveryLink(OrderDTO orderDTO) {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
-                                .takeOrderInDelivery(orderDTO.getOrderId()))
-                        .withRel("put-delivery")
+                                .assignCourierToOrder(orderDTO.getOrderId()))
+                        .withRel("post-courier")
         );
     }
 
@@ -72,7 +72,7 @@ public class HypermediaUtil {
         orderDTO.add(
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(OrderController.class)
                                 .deliverOrder(orderDTO.getOrderId()))
-                        .withRel("patch-delivery")
+                        .withRel("post-delivery")
         );
     }
 

@@ -33,10 +33,10 @@
     "get-order-by-client_id": {
       "href": "http://localhost/api/v1/orders?client_id=d4e30469-60c2-4ea2-a01b-35ea9b13d07c"
     },
-    "put-delivery": {
-      "href": "http://localhost/api/v1/orders/7fff2f52-4efc-4a40-b2ec-64145e9794a3/delivery"
+    "post-courier": {
+      "href": "http://localhost/api/v1/orders/7fff2f52-4efc-4a40-b2ec-64145e9794a3/courier"
     },
-    "patch-delivery": {
+    "post-delivery": {
       "href": "http://localhost/api/v1/orders/7fff2f52-4efc-4a40-b2ec-64145e9794a3/delivery"
     }
   }

@@ -111,11 +111,11 @@ public class OrderService {
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('COURIER')")
-    public void takeOrderToDelivery(String anOrderId, String aCourierId) {
+    public void assignCourierToOrder(String anOrderId, String aCourierId) {
         var order = orderRepository.findOrderById(OrderId.fromValue(anOrderId))
                 .orElseThrow(() -> new OrderNotFoundException(String.format("Order with id %s is not found", anOrderId)));
 
-        order.takeInDelivery(PersonId.fromValue(aCourierId));
+        order.assignCourier(PersonId.fromValue(aCourierId));
 
         domainEventPublisher.publish(order.getDomainEvents());
         orderRepository.save(order);

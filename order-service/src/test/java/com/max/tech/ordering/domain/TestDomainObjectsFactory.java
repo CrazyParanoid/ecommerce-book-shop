@@ -71,7 +71,7 @@ public class TestDomainObjectsFactory {
 
     public Order newPendingForDeliveringOrder() {
         var order = newPendingDeliveryServiceOrder();
-        order.takeInDelivery(PersonId.fromValue(TestValues.EMPLOYEE_ID));
+        order.assignCourier(PersonId.fromValue(TestValues.EMPLOYEE_ID));
         return order;
     }
 

@@ -5,7 +5,7 @@ import com.max.tech.ordering.domain.person.PersonId;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class OrderTookInDelivery implements DomainEvent {
+public class OrderCourierAssigned implements DomainEvent {
     private OrderId orderId;
     private PersonId courierId;
 

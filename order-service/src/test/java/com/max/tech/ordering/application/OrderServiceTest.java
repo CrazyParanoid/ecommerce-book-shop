@@ -120,13 +120,13 @@ public class OrderServiceTest {
     }
 
     @Test
-    public void shouldTakeOrderInDelivery() {
+    public void shouldAssignCourierToOrder() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newPendingDeliveryServiceOrder()));
         Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
-        orderService.takeOrderToDelivery(TestValues.ORDER_ID, TestValues.EMPLOYEE_ID);
+        orderService.assignCourierToOrder(TestValues.ORDER_ID, TestValues.EMPLOYEE_ID);
 
         Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any(Order.class));
         Mockito.verify(domainEventPublisher, Mockito.times(1)).publish(ArgumentMatchers.anyList());

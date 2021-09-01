@@ -81,14 +81,14 @@ public class OrderController {
         return orderDTO;
     }
 
-    @PostMapping(value = "/{orderId}/delivery")
-    @ApiOperation(value = "Take order in delivery")
-    public ResponseEntity<Void> takeOrderInDelivery(@PathVariable String orderId) {
-        orderService.takeOrderToDelivery(orderId, extractClientId());
+    @PostMapping(value = "/{orderId}/courier")
+    @ApiOperation(value = "Assign courier to order")
+    public ResponseEntity<Void> assignCourierToOrder(@PathVariable String orderId) {
+        orderService.assignCourierToOrder(orderId, extractClientId());
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping(value = "/{orderId}/delivery")
+    @PostMapping(value = "/{orderId}/delivery")
     @ApiOperation(value = "Deliver order")
     public ResponseEntity<Void> deliverOrder(@PathVariable String orderId) {
         orderService.deliverOrder(orderId);

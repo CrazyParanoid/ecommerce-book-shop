@@ -3,7 +3,7 @@ package com.max.tech.catalog.events;
 import com.max.tech.catalog.TestProductFactory;
 import com.max.tech.catalog.TestValues;
 import com.max.tech.catalog.catalog.Application;
-import com.max.tech.catalog.catalog.events.order.OrderDelivered;
+import com.max.tech.catalog.catalog.order.OrderPaidEvent;
 import com.max.tech.catalog.catalog.product.Product;
 import com.max.tech.catalog.catalog.product.ProductRepository;
 import com.max.tech.catalog.config.MongoConfig;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 )
 @Import(MongoConfig.class)
 @SpringBootTest(classes = Application.class)
-public class OrderDeliveredEventSubscriberIT {
+public class OrderPaidEventEventSubscriberIT {
     @Autowired
     @Qualifier("orderChannel")
     private MessageChannel inputMessageChannel;
@@ -53,7 +53,7 @@ public class OrderDeliveredEventSubscriberIT {
 
         inputMessageChannel.send(
                 MessageBuilder.withPayload(
-                        new OrderDelivered(Map.of(TestValues.FIRST_PRODUCT_ID, TestValues.FIRST_PRODUCT_QUANTITY))
+                        new OrderPaidEvent(Map.of(TestValues.FIRST_PRODUCT_ID, TestValues.FIRST_PRODUCT_QUANTITY))
                 )
                         .setHeader(EVENT_TYPE_HEADER, EVENT_TYPE_VALUE)
                         .build()

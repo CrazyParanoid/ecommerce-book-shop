@@ -153,25 +153,25 @@ public class Order extends AggregateRoot {
             throw new IllegalStateException("Payment can't be confirmed. Order items can't be empty");
 
         this.paymentId = paymentId;
-        this.status = Status.PENDING_DELIVERY_SERVICE;
+        this.status = Status.PENDING_COURIER_ASSIGMENT;
 
         raiseDomainEvent(new OrderPaid(this.orderId, this.paymentId, this.items));
     }
 
-    public void takeInDelivery(PersonId courierId) {
-        if (this.status != Status.PENDING_DELIVERY_SERVICE)
+    public void assignCourier(PersonId courierId) {
+        if (this.status != Status.PENDING_COURIER_ASSIGMENT)
             throw new IllegalStateException(String.format("Wrong invocation for current state:" +
                     " expected PENDING_DELIVERY_SERVICE, but actual %s", this.status.name()));
 
         this.courierId = courierId;
         this.status = Status.PENDING_FOR_DELIVERING;
 
-        raiseDomainEvent(new OrderTookInDelivery(this.orderId, this.courierId));
+        raiseDomainEvent(new OrderCourierAssigned(this.orderId, this.courierId));
     }
 
     public void deliver() {
         if (this.status != Status.PENDING_FOR_DELIVERING)
-            if (this.status != Status.PENDING_DELIVERY_SERVICE)
+            if (this.status != Status.PENDING_COURIER_ASSIGMENT)
                 throw new IllegalStateException(String.format("Wrong invocation for current state:" +
                         " expected PENDING_FOR_DELIVERING, but actual %s", this.status.name()));
 
@@ -222,7 +222,7 @@ public class Order extends AggregateRoot {
 
     public enum Status {
         PENDING_PAYMENT,
-        PENDING_DELIVERY_SERVICE,
+        PENDING_COURIER_ASSIGMENT,
         PENDING_FOR_DELIVERING,
         DELIVERED
     }
