@@ -1,6 +1,7 @@
 package com.max.tech.ordering.helper;
 
 import com.google.common.io.Files;
+import com.max.tech.ordering.web.security.Role;
 import com.max.tech.ordering.web.security.User;
 import com.max.tech.ordering.web.security.UserAuthentication;
 import io.jsonwebtoken.Jwts;
@@ -26,7 +27,7 @@ public class WebUtil {
                 new User(
                         TestValues.CLIENT_ID,
                         List.of(
-                                new User.Role("ADMIN"))
+                                new Role("ADMIN"))
                 )
         );
 

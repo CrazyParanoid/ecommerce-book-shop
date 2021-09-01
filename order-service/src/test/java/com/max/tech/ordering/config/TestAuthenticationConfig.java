@@ -1,6 +1,7 @@
 package com.max.tech.ordering.config;
 
 import com.max.tech.ordering.helper.TestValues;
+import com.max.tech.ordering.web.security.Role;
 import com.max.tech.ordering.web.security.User;
 import com.max.tech.ordering.web.security.UserAuthentication;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,7 @@ public class TestAuthenticationConfig {
             return new UserAuthentication(
                     new User(
                             TestValues.CLIENT_ID,
-                            List.of(new User.Role("ADMIN"))
+                            List.of(new Role("ADMIN"))
                     )
             );
         }

@@ -1,5 +1,6 @@
 package com.max.tech.ordering.infrastructure.config;
 
+import com.max.tech.ordering.web.security.Role;
 import com.max.tech.ordering.web.security.User;
 import com.max.tech.ordering.web.security.UserAuthentication;
 import com.nimbusds.jose.shaded.json.JSONArray;
@@ -31,7 +32,7 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests(expressionInterceptUrlRegistry
-                -> expressionInterceptUrlRegistry.anyRequest().authenticated())
+                        -> expressionInterceptUrlRegistry.anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServerConfigurer ->
                         resourceServerConfigurer.jwt(jwtConfigurer ->
                                 jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter())));
@@ -58,7 +59,7 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
         return jwt -> {
             var realmAccess = (JSONObject) jwt.getClaims().get(REALM_ACCESS);
             var roles = ((JSONArray) realmAccess.get(ROLES)).stream()
-                    .map(r -> new User.Role(
+                    .map(r -> new Role(
                             r.toString().toUpperCase(Locale.ROOT)))
                     .collect(Collectors.toList());
 

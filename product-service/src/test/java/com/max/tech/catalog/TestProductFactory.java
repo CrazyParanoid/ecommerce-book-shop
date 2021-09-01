@@ -8,7 +8,7 @@ public class TestProductFactory {
 
     public Product newProduct() {
         return new Product(
-                TestValues.FIRST_PRODUCT_ID,
+                TestValues.PRODUCT_ID,
                 TestValues.PICTURE_LINK,
                 TestValues.PRICE,
                 TestValues.NAME,

@@ -8,7 +8,7 @@ public class UserAuthentication extends AbstractAuthenticationToken {
     private final User user;
 
     public UserAuthentication(User user) {
-        super(user.getRoles());
+        super(user.roles());
         this.user = user;
     }
 

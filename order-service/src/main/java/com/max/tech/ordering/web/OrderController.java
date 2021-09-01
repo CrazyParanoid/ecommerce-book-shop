@@ -98,7 +98,7 @@ public class OrderController {
     private String extractClientId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         var user = (User) authentication.getPrincipal();
-        return user.getId();
+        return user.id();
     }
 
 }

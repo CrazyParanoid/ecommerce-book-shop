@@ -3,6 +3,7 @@ package com.max.tech.catalog.events;
 import com.max.tech.catalog.TestProductFactory;
 import com.max.tech.catalog.TestValues;
 import com.max.tech.catalog.catalog.Application;
+import com.max.tech.catalog.catalog.order.OrderItem;
 import com.max.tech.catalog.catalog.order.OrderPaidEvent;
 import com.max.tech.catalog.catalog.product.Product;
 import com.max.tech.catalog.catalog.product.ProductRepository;
@@ -22,8 +23,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +43,7 @@ public class OrderPaidEventEventSubscriberIT {
     private ProductRepository productRepository;
 
     private static final String EVENT_TYPE_HEADER = "type";
-    private static final String EVENT_TYPE_VALUE = "OrderDelivered";
+    private static final String EVENT_TYPE_VALUE = "OrderPaid";
 
     @Test
     public void shouldGetOrderDeliveredEvent() {
@@ -53,8 +54,14 @@ public class OrderPaidEventEventSubscriberIT {
 
         inputMessageChannel.send(
                 MessageBuilder.withPayload(
-                        new OrderPaidEvent(Map.of(TestValues.FIRST_PRODUCT_ID, TestValues.FIRST_PRODUCT_QUANTITY))
-                )
+                                new OrderPaidEvent(
+                                        Set.of(new OrderItem(
+                                                TestValues.PRODUCT_ID.toString(),
+                                                TestValues.PRICE,
+                                                TestValues.QUANTITY
+                                        ))
+                                )
+                        )
                         .setHeader(EVENT_TYPE_HEADER, EVENT_TYPE_VALUE)
                         .build()
         );
