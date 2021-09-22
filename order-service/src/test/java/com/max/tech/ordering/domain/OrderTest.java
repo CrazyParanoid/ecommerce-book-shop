@@ -1,15 +1,13 @@
 package com.max.tech.ordering.domain;
 
 import com.max.tech.ordering.domain.common.DomainEvent;
+import com.max.tech.ordering.domain.item.OrderItemId;
 import com.max.tech.ordering.domain.payment.PaymentId;
 import com.max.tech.ordering.domain.person.PersonId;
-import com.max.tech.ordering.domain.item.OrderItem;
-import com.max.tech.ordering.domain.item.OrderItemId;
 import com.max.tech.ordering.helper.TestValues;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,11 +19,6 @@ public class OrderTest {
         var order = TestDomainObjectsFactory.newOrder();
         var orderPlacedDomainEvent = getDomainEventByType(order, OrderPlaced.class);
 
-        assertNewOrder(order);
-        assertOrderPlacedDomainEvent(orderPlacedDomainEvent);
-    }
-
-    private void assertNewOrder(Order order) {
         var items = order.getItems();
         Assertions.assertNotNull(items);
         Assertions.assertNull(order.getPaymentId());
@@ -37,12 +30,9 @@ public class OrderTest {
         Assertions.assertEquals(order.getPersonId().toString(), TestValues.CLIENT_ID);
         Assertions.assertEquals(order.getTotalPrice(), Amount.ZERO_AMOUNT);
         Assertions.assertEquals(order.getDeliveryAddressId().toString(), TestValues.ADDRESS_ID);
-    }
-
-    private void assertOrderPlacedDomainEvent(OrderPlaced domainEvent) {
-        Assertions.assertNotNull(domainEvent.getOrderId());
-        Assertions.assertEquals(domainEvent.getClientId(), TestValues.CLIENT_ID);
-        Assertions.assertEquals(domainEvent.getDeliveryAddressId(), TestValues.ADDRESS_ID);
+        Assertions.assertNotNull(orderPlacedDomainEvent.getOrderId());
+        Assertions.assertEquals(orderPlacedDomainEvent.getClientId(), TestValues.CLIENT_ID);
+        Assertions.assertEquals(orderPlacedDomainEvent.getDeliveryAddressId(), TestValues.ADDRESS_ID);
     }
 
     @Test
@@ -55,7 +45,16 @@ public class OrderTest {
                 TestValues.FIRST_ITEM_QUANTITY
         );
 
-        assertOrderWithOneItem(order);
+        var domainEvent = getDomainEventByType(order, OrderItemAdded.class);
+        var item = order.findItemById(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID));
+        Assertions.assertNotNull(item);
+        Assertions.assertEquals(item.itemId().toString(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(item.price().getValue(), TestValues.FIRST_ITEM_PRICE);
+        Assertions.assertEquals(item.quantity(), TestValues.FIRST_ITEM_QUANTITY);
+        Assertions.assertEquals(domainEvent.getItemId(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(domainEvent.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
+        Assertions.assertEquals(domainEvent.getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
+        Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
     }
 
@@ -85,20 +84,6 @@ public class OrderTest {
                 "Illegal price 0. Price must be greater than 0");
     }
 
-    private void assertOrderWithOneItem(Order order) {
-        var domainEvent = getDomainEventByType(order, OrderItemAdded.class);
-        var item = order.findItemById(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID));
-
-        assertItem(item,
-                TestValues.FIRST_ITEM_ID,
-                TestValues.FIRST_ITEM_PRICE,
-                TestValues.FIRST_ITEM_QUANTITY);
-        assertOrderItemAddedDomainEvent(domainEvent,
-                TestValues.FIRST_ITEM_ID,
-                TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM,
-                TestValues.FIRST_ITEM_QUANTITY);
-    }
-
     @Test
     public void shouldAddTwoItemsToOrder() {
         var order = TestDomainObjectsFactory.newOrder();
@@ -114,43 +99,28 @@ public class OrderTest {
                 TestValues.SECOND_ITEM_QUANTITY
         );
 
-        assertOrderWithTwoItems(order);
-        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
-    }
-
-    private void assertOrderWithTwoItems(Order order) {
         var domainEvents = getDomainEventsByType(order, OrderItemAdded.class);
+
         var firstItem = order.findItemById(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID));
+        Assertions.assertNotNull(firstItem);
+        Assertions.assertEquals(firstItem.itemId().toString(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(firstItem.price().getValue(), TestValues.FIRST_ITEM_PRICE);
+        Assertions.assertEquals(firstItem.quantity(), TestValues.FIRST_ITEM_QUANTITY);
+
         var secondItem = order.findItemById(OrderItemId.fromValue(TestValues.SECOND_ITEM_ID));
+        Assertions.assertEquals(secondItem.itemId().toString(), TestValues.SECOND_ITEM_ID);
+        Assertions.assertEquals(secondItem.price().getValue(), TestValues.SECOND_ITEM_PRICE);
+        Assertions.assertEquals(secondItem.quantity(), TestValues.SECOND_ITEM_QUANTITY);
 
-        assertItem(firstItem, TestValues.FIRST_ITEM_ID,
-                TestValues.FIRST_ITEM_PRICE,
-                TestValues.FIRST_ITEM_QUANTITY);
-        assertItem(secondItem, TestValues.SECOND_ITEM_ID,
-                TestValues.SECOND_ITEM_PRICE,
-                TestValues.SECOND_ITEM_QUANTITY);
-
-        assertOrderItemAddedDomainEvent(domainEvents.get(0), TestValues.FIRST_ITEM_ID,
-                TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM,
-                TestValues.FIRST_ITEM_QUANTITY);
-        assertOrderItemAddedDomainEvent(domainEvents.get(1), TestValues.SECOND_ITEM_ID,
-                TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS,
-                TestValues.SECOND_ITEM_QUANTITY);
-    }
-
-    private void assertItem(OrderItem orderItem, String itemId, BigDecimal amount, Integer quantity) {
-        Assertions.assertNotNull(orderItem);
-        Assertions.assertEquals(orderItem.itemId().toString(), itemId);
-        Assertions.assertEquals(orderItem.price().getValue(), amount);
-        Assertions.assertEquals(orderItem.quantity(), quantity);
-    }
-
-    private void assertOrderItemAddedDomainEvent(OrderItemAdded domainEvent, String itemId,
-                                                 BigDecimal amount, Integer quantity) {
-        Assertions.assertEquals(domainEvent.getItemId(), itemId);
-        Assertions.assertEquals(domainEvent.getTotalPrice(), amount);
-        Assertions.assertEquals(domainEvent.getQuantity(), quantity);
-        Assertions.assertNotNull(domainEvent.getOrderId());
+        Assertions.assertEquals(domainEvents.get(0).getItemId(), TestValues.FIRST_ITEM_ID);
+        Assertions.assertEquals(domainEvents.get(0).getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
+        Assertions.assertEquals(domainEvents.get(0).getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
+        Assertions.assertNotNull(domainEvents.get(0).getOrderId());
+        Assertions.assertEquals(domainEvents.get(1).getItemId(), TestValues.SECOND_ITEM_ID);
+        Assertions.assertEquals(domainEvents.get(1).getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
+        Assertions.assertEquals(domainEvents.get(1).getQuantity(), TestValues.SECOND_ITEM_QUANTITY);
+        Assertions.assertNotNull(domainEvents.get(1).getOrderId());
+        Assertions.assertEquals(order.getTotalPrice().getValue(), TestValues.TOTAL_ORDER_PRICE_WITH_TWO_ITEMS);
     }
 
     @Test
@@ -220,10 +190,6 @@ public class OrderTest {
 
         Assertions.assertEquals(order.getStatus(), Order.Status.PENDING_FOR_DELIVERING);
         Assertions.assertEquals(order.getCourierId().toString(), TestValues.EMPLOYEE_ID);
-        assertOrderTookInDeliveryDomainEvent(domainEvent);
-    }
-
-    private void assertOrderTookInDeliveryDomainEvent(OrderCourierAssigned domainEvent) {
         Assertions.assertNotNull(domainEvent);
         Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertEquals(domainEvent.getCourierId(), TestValues.EMPLOYEE_ID);
@@ -236,15 +202,11 @@ public class OrderTest {
         order.deliver();
         var domainEvent = getDomainEventByType(order, OrderDelivered.class);
 
-        assertOrderDeliveredDomainEvent(domainEvent);
-        Assertions.assertTrue(order.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
-        Assertions.assertEquals(order.getStatus(), Order.Status.DELIVERED);
-    }
-
-    private void assertOrderDeliveredDomainEvent(OrderDelivered domainEvent) {
         Assertions.assertNotNull(domainEvent);
         Assertions.assertNotNull(domainEvent.getOrderId());
         Assertions.assertTrue(domainEvent.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
+        Assertions.assertTrue(order.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
+        Assertions.assertEquals(order.getStatus(), Order.Status.DELIVERED);
     }
 
     private <T extends DomainEvent> T getDomainEventByType(Order order, Class<T> clazz) {

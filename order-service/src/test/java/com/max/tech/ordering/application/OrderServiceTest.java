@@ -1,6 +1,5 @@
 package com.max.tech.ordering.application;
 
-import com.max.tech.ordering.application.dto.OrderDTO;
 import com.max.tech.ordering.domain.Order;
 import com.max.tech.ordering.domain.OrderId;
 import com.max.tech.ordering.domain.OrderRepository;
@@ -49,10 +48,6 @@ public class OrderServiceTest {
                 TestApplicationObjectsFactory.newPlaceOrderCommand()
         );
 
-        assertNewOrderDTO(orderDTO);
-    }
-
-    private void assertNewOrderDTO(OrderDTO orderDTO) {
         Assertions.assertNotNull(orderDTO.getOrderId());
         Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
         Assertions.assertNull(orderDTO.getDeliveredAt());
@@ -156,21 +151,6 @@ public class OrderServiceTest {
 
         var orderDTO = orderService.findOrderById(TestValues.ORDER_ID);
 
-        assertOrderDTO(orderDTO);
-    }
-
-    @Test
-    public void shouldReturnOrdersForClient() {
-        Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
-                .thenReturn(Collections.singletonList(TestDomainObjectsFactory.newDeliveredOrder()));
-
-        var orderDTOs = orderService.findPendingPaymentOrders(TestValues.CLIENT_ID);
-
-        Assertions.assertFalse(orderDTOs.isEmpty());
-        orderDTOs.forEach(this::assertOrderDTO);
-    }
-
-    private void assertOrderDTO(OrderDTO orderDTO) {
         Assertions.assertNotNull(orderDTO.getOrderId());
         Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
         Assertions.assertTrue(orderDTO.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
@@ -189,6 +169,36 @@ public class OrderServiceTest {
         Assertions.assertEquals(itemDTO.getItemId(), TestValues.FIRST_ITEM_ID);
         Assertions.assertEquals(itemDTO.getPrice(), TestValues.FIRST_ITEM_PRICE);
         Assertions.assertEquals(itemDTO.getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
+    }
+
+    @Test
+    public void shouldReturnOrdersForClient() {
+        Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
+                .thenReturn(Collections.singletonList(TestDomainObjectsFactory.newDeliveredOrder()));
+
+        var orderDTOs = orderService.findPendingPaymentOrders(TestValues.CLIENT_ID);
+
+        Assertions.assertFalse(orderDTOs.isEmpty());
+        orderDTOs.forEach(orderDTO -> {
+            Assertions.assertNotNull(orderDTO.getOrderId());
+            Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
+            Assertions.assertTrue(orderDTO.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
+            Assertions.assertEquals(orderDTO.getStatus(), Order.Status.DELIVERED.name());
+            Assertions.assertEquals(orderDTO.getTotalPrice(), TestValues.TOTAL_ORDER_PRICE_WITH_ONE_ITEM);
+            Assertions.assertEquals(orderDTO.getCourierId(), TestValues.EMPLOYEE_ID);
+            Assertions.assertFalse(orderDTO.getItems().isEmpty());
+            Assertions.assertEquals(orderDTO.getPaymentId(), TestValues.PAYMENT_ID);
+            Assertions.assertEquals(orderDTO.getDeliveryAddressId(), TestValues.ADDRESS_ID);
+
+            var itemDTO = orderDTO.getItems()
+                    .stream()
+                    .findAny()
+                    .orElse(null);
+            Assertions.assertNotNull(itemDTO);
+            Assertions.assertEquals(itemDTO.getItemId(), TestValues.FIRST_ITEM_ID);
+            Assertions.assertEquals(itemDTO.getPrice(), TestValues.FIRST_ITEM_PRICE);
+            Assertions.assertEquals(itemDTO.getQuantity(), TestValues.FIRST_ITEM_QUANTITY);
+        });
     }
 
 }

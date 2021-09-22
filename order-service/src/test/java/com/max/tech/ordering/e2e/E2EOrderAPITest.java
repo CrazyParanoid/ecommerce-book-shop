@@ -55,11 +55,7 @@ public class E2EOrderAPITest {
 
         var response = postNewOrder();
 
-        var order = objectMapper.readValue(response, OrderDTO.class);
-        assertOrderDTO(order);
-    }
-
-    private void assertOrderDTO(OrderDTO orderDTO) {
+        var orderDTO = objectMapper.readValue(response, OrderDTO.class);
         Assertions.assertNotNull(orderDTO.getOrderId());
         Assertions.assertEquals(orderDTO.getClientId(), TestValues.CLIENT_ID);
         Assertions.assertNull(orderDTO.getDeliveredAt());
