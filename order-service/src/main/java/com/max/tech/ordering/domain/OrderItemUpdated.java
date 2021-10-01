@@ -15,9 +15,7 @@ public class OrderItemUpdated implements DomainEvent {
     private Integer quantity;
     private Amount totalPrice;
 
-    public String getOrderId() {
-        return orderId.toString();
-    }
+    public String getOrderId() {return orderId.toString();}
 
     public String getItemId() {
         return itemId.toString();

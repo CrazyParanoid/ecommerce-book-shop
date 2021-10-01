@@ -3,6 +3,8 @@ spring:
     name: order-service
   main:
     allow-bean-definition-overriding: true
+  zipkin:
+    base-url: ${ZIPKIN_URL:http://localhost:9411/}
   cloud:
     stream:
       kafka:
@@ -10,20 +12,10 @@ spring:
           brokers: ${SERVICE_KAFKA_HOST:localhost:9092}
           autoCreateTopics: true
       bindings:
-        paymentChannel:
-          binder: kafka
-          destination: ${PAYMENT_EVENTS_TOPIC:paymentEventsTopic}
-          contentType: application/json
-        clientChannel:
-          binder: kafka
-          destination: ${CLIENT_EVENTS_TOPIC:clientEventsTopic}
-          contentType: application/json
         orderChannel:
           binder: kafka
           destination: ${ORDER_EVENTS_TOPIC:orderEventsTopic}
           contentType: application/json
-    discovery:
-      enabled: false
   datasource:
     driverClassName: com.mysql.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/order_db?useUnicode=yes&characterEncoding=UTF-8&serverTimezone=Europe/Moscow}
@@ -44,18 +36,20 @@ eureka:
   client:
     serviceUrl:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
-  instance:
-    preferIpAddress: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     metrics:
       enabled: true
     health:
       show-details: always
 server:
-  port: 8085
+  port: 8082

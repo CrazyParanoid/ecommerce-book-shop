@@ -1,0 +1,266 @@
+asyncapi: 2.0.0
+info:
+  title: Order Service
+  version: '1.0'
+  description: |
+    Ordering service
+
+servers:
+  production:
+    url: kafka-01.ru:9092,kafka-02.ru:9092,kafka-03.ru:9092
+    protocol: kafka
+    description: Kafka Cluster
+
+channels:
+  orderEventsTopic:
+    publish:
+      operationId: publishOrdersEvent
+      message:
+        oneOf:
+          - $ref: '#/components/messages/OrderCourierAssigned'
+          - $ref: '#/components/messages/OrderDelivered'
+          - $ref: '#/components/messages/OrderItemAdded'
+          - $ref: '#/components/messages/OrderItemRemoved'
+          - $ref: '#/components/messages/OrderItemUpdated'
+          - $ref: '#/components/messages/OrderPaid'
+          - $ref: '#/components/messages/OrderPlaced'
+
+components:
+  messages:
+    OrderPlaced:
+      name: orderPlaced
+      title: Order has been successfully placed.
+      summary: Informs subscribers that an order has been successfully placed.
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderPlaced
+      payload:
+        $ref: '#/components/schemas/orderPlaced'
+    OrderPaid:
+      name: orderPaid
+      title: Order has been successfully paid.
+      summary: Informs subscribers that an order has been successfully paid.
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderPaid
+      payload:
+        $ref: '#/components/schemas/orderPaid'
+    OrderItemUpdated:
+      name: orderItemUpdated
+      title: Order item has been successfully updated.
+      summary: Informs subscribers that an order item has been successfully updated.
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderItemUpdated
+      payload:
+        $ref: '#/components/schemas/orderItemUpdated'
+    OrderItemRemoved:
+      name: orderItemRemoved
+      title: Order item has been successfully removed.
+      summary: Informs subscribers that an order item has been successfully removed.
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderItemRemoved
+      payload:
+        $ref: '#/components/schemas/orderItemRemoved'
+    OrderItemAdded:
+      name: orderItemAdded
+      title: Order item has been successfully added successfully.
+      summary: Informs subscribers that an order item has been successfully added.
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderItemAdded
+      payload:
+        $ref: '#/components/schemas/orderItemAdded'
+    OrderDelivered:
+      name: orderDelivered
+      title: Order has been successfully delivered.
+      summary: Informs subscribers that an order has been successfully delivered.
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderDelivered
+      payload:
+        $ref: '#/components/schemas/orderDelivered'
+    OrderCourierAssigned:
+      name: orderCourierAssigned
+      title: Courier has been successfully assigned to order.
+      summary: Informs subscribers courier has been successfully assigned to order
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          type:
+            type: string
+            description: Event type
+            example: OrderCourierAssigned
+      payload:
+        $ref: '#/components/schemas/orderCourierAssigned'
+
+  schemas:
+    orderPlaced:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        personId:
+          type: string
+          description: "Client identifier"
+          example: 774c289c-5f2d-45df-808a-c7a07d74a22d
+        deliveryAddressId:
+          type: string
+          description: "Delivery address identifier"
+          example: fb8b17f7-acd5-489d-9a3d-c2c01e3aff12
+        orderItems:
+          type: array
+          description: "Set of selected items"
+          items:
+            type: object
+            properties:
+              itemId:
+                type: string
+                description: "Order item identifier"
+                example: 84b72b41-69c7-4bf8-9173-54337311b447
+              price:
+                type: number
+                description: "Order item price"
+                example: 1400
+              quantity:
+                type: number
+                description: "Order item quantity"
+                example: 2
+    orderPaid:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        paymentId:
+          type: string
+          description: "Payment identifier"
+          example: d1b834da-99f6-425d-a4a3-dd60db49ea04
+        orderItems:
+          type: array
+          description: "Set of paid items"
+          items:
+            type: object
+            properties:
+              itemId:
+                type: string
+                description: "Order item identifier"
+                example: 84b72b41-69c7-4bf8-9173-54337311b447
+              price:
+                type: number
+                description: "Order item price"
+                example: 1400
+              quantity:
+                type: number
+                description: "Order item quantity"
+                example: 2
+    orderItemUpdated:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        itemId:
+          type: string
+          description: "Order item identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        price:
+          type: number
+          description: "Order item price"
+          example: 1400
+        quantity:
+          type: number
+          description: "Order item quantity"
+          example: 2
+    orderItemRemoved:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        itemId:
+          type: string
+          description: "Order item identifier"
+          example: 84b72b41-69c7-4bf8-9173-54337311b447
+        totalPrice:
+          type: number
+          description: "Total price of order"
+          example: 12500
+    orderItemAdded:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        itemId:
+          type: string
+          description: "Order item identifier"
+          example: 84b72b41-69c7-4bf8-9173-54337311b447
+        price:
+          type: number
+          description: "Order item price"
+          example: 1400
+        quantity:
+          type: number
+          description: "Order item quantity"
+          example: 2
+    orderDelivered:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        deliveredAt:
+          type: string
+          description: "Order delivery date"
+          example: "2021-11-21 T12:48:00.973"
+    orderCourierAssigned:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "Order identifier"
+          example: 9b157103-0169-4731-bf90-e916d1bde8c5
+        courierId:
+          type: string
+          description: "Courier identifier"
+          example: add95ca4-b02b-4aac-a5f3-694476f7e7a7

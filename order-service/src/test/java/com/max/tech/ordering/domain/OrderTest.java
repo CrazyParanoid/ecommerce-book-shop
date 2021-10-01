@@ -72,19 +72,6 @@ public class OrderTest {
     }
 
     @Test
-    public void shouldThrowExceptionDuringAddingItemWithZeroPrice() {
-        var order = TestDomainObjectsFactory.newOrder();
-
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> order.addItem(
-                        OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
-                        Amount.ZERO_AMOUNT,
-                        TestValues.FIRST_ITEM_QUANTITY
-                ),
-                "Illegal price 0. Price must be greater than 0");
-    }
-
-    @Test
     public void shouldAddTwoItemsToOrder() {
         var order = TestDomainObjectsFactory.newOrder();
 
@@ -155,8 +142,8 @@ public class OrderTest {
 
         Assertions.assertThrows(IllegalStateException.class,
                 () -> order.removeItem(OrderItemId.fromValue(TestValues.FIRST_ITEM_ID)),
-                "Item with id 7417d778-fabe-4a90-ad93-3dfb74c51608 can't be deleted. " +
-                        "Order items can't be empty");
+                String.format("Item with id %s can't be deleted. " +
+                        "Order items can't be empty", TestValues.FIRST_ITEM_ID));
     }
 
     @Test
@@ -207,6 +194,19 @@ public class OrderTest {
         Assertions.assertTrue(domainEvent.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
         Assertions.assertTrue(order.getDeliveredAt().toLocalDate().isEqual(LocalDate.now()));
         Assertions.assertEquals(order.getStatus(), Order.Status.DELIVERED);
+    }
+
+    @Test
+    public void shouldThrowExceptionDuringAddingItemWithZeroPrice() {
+        var order = TestDomainObjectsFactory.newOrder();
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> order.addItem(
+                        OrderItemId.fromValue(TestValues.FIRST_ITEM_ID),
+                        Amount.ZERO_AMOUNT,
+                        TestValues.FIRST_ITEM_QUANTITY
+                ),
+                "Illegal price 0.000000. Price must be greater than 0");
     }
 
     private <T extends DomainEvent> T getDomainEventByType(Order order, Class<T> clazz) {
