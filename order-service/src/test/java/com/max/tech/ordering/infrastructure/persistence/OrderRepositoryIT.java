@@ -1,22 +1,28 @@
 package com.max.tech.ordering.infrastructure.persistence;
 
-import com.max.tech.ordering.Application;
 import com.max.tech.ordering.domain.OrderRepository;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
 import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.helper.TestValues;
+import com.max.tech.ordering.infrastructure.config.PersistenceConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
+
+
 @Transactional
 @ActiveProfiles("it")
-@SpringBootTest(classes = Application.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DataJpaTest(
+        includeFilters = @ComponentScan.Filter(
+                type = ASSIGNABLE_TYPE,
+                classes = PersistenceConfig.class)
+)
 public class OrderRepositoryIT {
     @Autowired
     private OrderRepository orderRepository;

@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      httpclient:
+        response-timeout: 8000
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "authorization"
+      x-forwarded:
+        enabled: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    leaseRenewalIntervalInSeconds: 1
+    leaseExpirationDurationInSeconds: 2
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+    metrics:
+      enabled: true
+    health:
+      show-details: always
+server:
+  port: 8087

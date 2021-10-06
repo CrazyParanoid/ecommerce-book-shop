@@ -39,7 +39,8 @@ public class OrderServiceTest {
 
     @Test
     public void shouldPlaceOrder() {
-        Mockito.doNothing().when(orderRepository).save(ArgumentMatchers.any(Order.class));
+        Mockito.when(orderRepository.save(ArgumentMatchers.any(Order.class)))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
         Mockito.doNothing().when(domainEventPublisher).publish(ArgumentMatchers.anyList());
         Mockito.when(orderRepository.findPendingPaymentOrdersForClient(ArgumentMatchers.any(PersonId.class)))
                 .thenReturn(Collections.emptyList());
@@ -103,7 +104,8 @@ public class OrderServiceTest {
     public void shouldConfirmPayment() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newOrderWithOneItem()));
-        Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
+        Mockito.when(orderRepository.save(orderCaptor.capture()))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
         orderService.confirmOrderPayment(TestValues.ORDER_ID, TestValues.PAYMENT_ID);
@@ -118,7 +120,8 @@ public class OrderServiceTest {
     public void shouldAssignCourierToOrder() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newPendingDeliveryServiceOrder()));
-        Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
+        Mockito.when(orderRepository.save(orderCaptor.capture()))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
         orderService.assignCourierToOrder(TestValues.ORDER_ID, TestValues.EMPLOYEE_ID);
@@ -133,7 +136,8 @@ public class OrderServiceTest {
     public void shouldDeliverOrder() {
         Mockito.when(orderRepository.findOrderById(ArgumentMatchers.any(OrderId.class)))
                 .thenReturn(Optional.of(TestDomainObjectsFactory.newPendingForDeliveringOrder()));
-        Mockito.doNothing().when(orderRepository).save(orderCaptor.capture());
+        Mockito.when(orderRepository.save(orderCaptor.capture()))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
         Mockito.doNothing().when(domainEventPublisher).publish(domainEventsCaptor.capture());
 
         orderService.deliverOrder(TestValues.ORDER_ID);
