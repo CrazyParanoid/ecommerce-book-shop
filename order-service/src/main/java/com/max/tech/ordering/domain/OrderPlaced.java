@@ -5,9 +5,11 @@ import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.item.OrderItem;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class OrderPlaced implements DomainEvent {
     private OrderId orderId;

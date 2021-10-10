@@ -4,38 +4,44 @@ spring:
   main:
     allow-bean-definition-overriding: true
   zipkin:
-    base-url: ${ZIPKIN_URL:http://localhost:9411/}
+    base-url: ${ZIPKIN_URL:http://zipkin:9411/}
+  sleuth:
+    scheduled:
+      enabled: false
   cloud:
     stream:
       kafka:
         binder:
-          brokers: ${SERVICE_KAFKA_HOST:localhost:9092}
+          replicationFactor: 1
+          brokers: kafka:9092
           autoCreateTopics: true
       bindings:
         orderChannel:
           binder: kafka
           destination: ${ORDER_EVENTS_TOPIC:orderEventsTopic}
           contentType: application/json
+    discovery:
+      enabled: false
   datasource:
     driverClassName: com.mysql.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3306/order_db?useUnicode=yes&characterEncoding=UTF-8&serverTimezone=Europe/Moscow}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Password123}
+    url: ${DB_URL:jdbc:mysql://mysql:3306/order_db?useUnicode=yes&characterEncoding=UTF-8&serverTimezone=Europe/Moscow}
+    username: ${DB_USER:order_user}
+    password: ${DB_PASSWORD:password}
   jpa:
     hibernate.ddl-auto: validate
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8082/auth/realms/test/protocol/openid-connect/certs}
-          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8082/auth/realms/test}
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://keycloak:8080/auth/realms/test/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://keycloak:8080/auth/realms/test}
 events:
   delay: 4000
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_URL:http://eureka:8761/eureka}
 
 management:
   endpoints:
@@ -51,5 +57,3 @@ management:
       enabled: true
     health:
       show-details: always
-server:
-  port: 8082

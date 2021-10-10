@@ -13,8 +13,8 @@ import java.math.RoundingMode;
 
 @Getter
 @Embeddable
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Amount implements ValueObject, Comparable<Amount> {
     private BigDecimal value;
 

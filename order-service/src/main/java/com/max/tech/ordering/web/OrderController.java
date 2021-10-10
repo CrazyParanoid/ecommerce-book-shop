@@ -53,7 +53,7 @@ public class OrderController {
         return orderService.findPendingPaymentOrders(clientId);
     }
 
-    @PutMapping(value = "/{orderId}/payment/{paymentId}")
+    @PostMapping(value = "/{orderId}/payment/{paymentId}")
     @ApiOperation(value = "Confirm order payment")
     public ResponseEntity<Void> confirmPayment(@PathVariable String orderId, @PathVariable String paymentId) {
         orderService.confirmOrderPayment(orderId, paymentId);

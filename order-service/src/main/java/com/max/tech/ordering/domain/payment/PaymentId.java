@@ -1,7 +1,6 @@
 package com.max.tech.ordering.domain.payment;
 
 import com.max.tech.ordering.domain.common.ValueObject;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +10,8 @@ import java.util.Objects;
 
 @Getter
 @Embeddable
+@NoArgsConstructor
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentId implements ValueObject {
     private String value;
 

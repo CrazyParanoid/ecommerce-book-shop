@@ -13,8 +13,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Embeddable
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PersonId implements ValueObject, Serializable {
     @Type(type = "org.hibernate.type.UUIDBinaryType")
     @Column(name = "client_id")

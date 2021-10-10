@@ -1,5 +1,4 @@
 <configuration>
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
         <encoder>
@@ -8,8 +7,9 @@
         </encoder>
     </appender>
 
+    <springProperty scope="context" name="host" source="logging"/>
     <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>logstash:5046</destination>
+        <destination>${host}</destination>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 

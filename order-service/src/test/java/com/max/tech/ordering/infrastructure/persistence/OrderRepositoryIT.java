@@ -4,7 +4,7 @@ import com.max.tech.ordering.domain.OrderRepository;
 import com.max.tech.ordering.domain.TestDomainObjectsFactory;
 import com.max.tech.ordering.domain.person.PersonId;
 import com.max.tech.ordering.helper.TestValues;
-import com.max.tech.ordering.infrastructure.config.PersistenceConfig;
+import com.max.tech.ordering.infrastructure.config.ApplicationConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
 @DataJpaTest(
         includeFilters = @ComponentScan.Filter(
                 type = ASSIGNABLE_TYPE,
-                classes = PersistenceConfig.class)
+                classes = ApplicationConfig.class)
 )
 public class OrderRepositoryIT {
     @Autowired

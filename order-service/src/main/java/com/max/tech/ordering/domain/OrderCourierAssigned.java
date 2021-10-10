@@ -3,7 +3,9 @@ package com.max.tech.ordering.domain;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.person.PersonId;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class OrderCourierAssigned implements DomainEvent {
     private OrderId orderId;

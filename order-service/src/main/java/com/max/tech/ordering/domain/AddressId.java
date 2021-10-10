@@ -15,8 +15,8 @@ import java.util.UUID;
 
 @Getter
 @Embeddable
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AddressId implements ValueObject, Serializable {
     @Type(type = "org.hibernate.type.UUIDBinaryType")
     @Column(name = "address_id")

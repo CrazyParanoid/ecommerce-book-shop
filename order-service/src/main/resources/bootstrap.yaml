@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: order-service
+  main:
+    allow-bean-definition-overriding: true
+  sleuth:
+    scheduled:
+      enabled: false
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    metrics:
+      enabled: true
+    health:
+      show-details: always
+server:
+  port: 8082

@@ -10,10 +10,10 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "items")
 @javax.persistence.Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem extends IdentifiedDomainObject implements Entity {
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "item_id"))

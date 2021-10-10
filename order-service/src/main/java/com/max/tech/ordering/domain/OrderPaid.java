@@ -1,15 +1,15 @@
 package com.max.tech.ordering.domain;
 
 import com.max.tech.ordering.domain.common.DomainEvent;
-import com.max.tech.ordering.domain.payment.PaymentId;
 import com.max.tech.ordering.domain.item.OrderItem;
+import com.max.tech.ordering.domain.payment.PaymentId;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
-@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class OrderPaid implements DomainEvent {
     private OrderId orderId;

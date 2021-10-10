@@ -1,0 +1,33 @@
+spring:
+  zipkin:
+    base-url: http://192.168.99.100:9411/
+  cloud:
+    stream:
+      kafka:
+        binder:
+          replicationFactor: 1
+          brokers: 192.168.99.100:9092
+          autoCreateTopics: true
+      bindings:
+        orderChannel:
+          binder: kafka
+          destination: orderEventsTopic
+          contentType: application/json
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.99.100:3306/order_db?useUnicode=yes&characterEncoding=UTF-8&serverTimezone=Europe/Moscow
+    username: order_user
+    password: password
+  jpa:
+    hibernate.ddl-auto: validate
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://192.168.99.100:8080/auth/realms/test/protocol/openid-connect/certs
+          issuer-uri: http://192.168.99.100.100:8080/auth/realms/test
+events:
+  delay: 4000
+
+logging:
+  host: localhost:5601

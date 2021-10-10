@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@ActiveProfiles("security")
+@ActiveProfiles({"security", "it"})
 @Import(TestAuthenticationConfig.class)
 @WebMvcTest(value = OrderController.class)
 public class OrderControllerAPITest {

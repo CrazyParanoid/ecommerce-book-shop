@@ -3,9 +3,11 @@ package com.max.tech.ordering.domain;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.item.OrderItemId;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class OrderItemRemoved implements DomainEvent {
     private OrderId orderId;

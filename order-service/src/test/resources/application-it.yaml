@@ -12,14 +12,16 @@ spring:
         dialect: com.max.tech.ordering.infrastructure.persistence.H2DialectCustom
         format_sql: true
   cloud:
+    config:
+      enabled: false
     discovery:
       enabled: false
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8081/auth/realms/ecommerce/protocol/openid-connect/certs}
-          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8081/auth/realms/ecommerce}
+          jwk-set-uri: ${IDENTITY_SERVICE_JWK_URL:http://localhost:8080/auth/realms/ecommerce/protocol/openid-connect/certs}
+          issuer-uri: ${IDENTITY_SERVICE_ISSUER_URL:http://localhost:8080/auth/realms/ecommerce}
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -29,3 +31,6 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password: sa
+
+events:
+  delay: 4000

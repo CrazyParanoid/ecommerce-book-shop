@@ -1,12 +1,9 @@
 package com.max.tech.ordering.infrastructure.events;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import brave.Tracer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.max.tech.ordering.domain.common.DomainEvent;
 import com.max.tech.ordering.domain.common.DomainEventPublisher;
-import com.max.tech.ordering.domain.item.OrderItem;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,47 +21,41 @@ import java.util.List;
 public class DomainEventPublisherImpl implements DomainEventPublisher {
     private final StoredDomainEventRepository storedDomainEventRepository;
     private final OutputBindings outputBindings;
+    private final ObjectMapper objectMapper;
+    private final Tracer tracer;
 
     private static final String EVENT_TYPE_HEADER = "type";
 
     @Autowired
     public DomainEventPublisherImpl(StoredDomainEventRepository storedDomainEventRepository,
-                                    OutputBindings outputBindings) {
+                                    OutputBindings outputBindings, ObjectMapper objectMapper,
+                                    Tracer tracer) {
         this.storedDomainEventRepository = storedDomainEventRepository;
         this.outputBindings = outputBindings;
+        this.objectMapper = objectMapper;
+        this.tracer = tracer;
     }
 
     @Override
+    @SneakyThrows
     @Transactional(propagation = Propagation.MANDATORY)
     public void publish(List<? super DomainEvent> domainEvents) {
-        var gson = new GsonBuilder().registerTypeAdapterFactory(HibernateProxyTypeAdapter.FACTORY)
-                .addSerializationExclusionStrategy(
-                        new ExclusionStrategy() {
-                            @Override
-                            public boolean shouldSkipField(FieldAttributes field) {
-                                return field.getDeclaringClass() == OrderItem.class
-                                        && field.getName().equals("order");
-                            }
+        for (Object event : domainEvents) {
+            try {
+                outputBindings.orderChannel()
+                        .send(MessageBuilder.withPayload(event)
+                                .setHeader(EVENT_TYPE_HEADER, event.getClass().getSimpleName())
+                                .build());
+                publishDomainEvent(event.getClass().getSimpleName(), event);
 
-                            @Override
-                            public boolean shouldSkipClass(Class<?> aClass) {
-                                return false;
-                            }
-                        }
-                ).create();
+            } catch (Exception ex) {
+                log.error("Error during publishing domain event {}: {}", event.getClass().getSimpleName(), ex.getMessage());
 
-        domainEvents.forEach(e -> {
-                    try {
-                        outputBindings.orderChannel()
-                                .send(MessageBuilder.withPayload(e)
-                                        .setHeader(EVENT_TYPE_HEADER, e.getClass().getSimpleName())
-                                        .build());
-                        publishDomainEvent(e.getClass().getSimpleName(), e);
-                    } catch (Exception ex) {
-                        storedDomainEventRepository.save(new StoredDomainEvent(gson.toJson(e), e.getClass().getName()));
-                    }
-                }
-        );
+                storedDomainEventRepository.save(new StoredDomainEvent(
+                        objectMapper.writeValueAsString(event),
+                        event.getClass().getName()));
+            }
+        }
     }
 
     @SneakyThrows
@@ -74,17 +65,23 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
         var optionalStoredDomainEvent = storedDomainEventRepository.getFirstByIdNotNull();
 
         if (optionalStoredDomainEvent.isPresent()) {
-
             var storedDomainEvent = optionalStoredDomainEvent.get();
             var clazz = Class.forName(storedDomainEvent.getType());
 
-            var domainEvent = new Gson().fromJson(
-                    storedDomainEvent.getPayload(),
-                    clazz
-            );
+            var domainEvent = objectMapper.readValue(storedDomainEvent.getPayload(), Object.class);
 
             publishDomainEvent(clazz.getSimpleName(), domainEvent);
             storedDomainEventRepository.delete(storedDomainEvent);
+            sendSpan();
+        }
+    }
+
+    private void sendSpan() {
+        var span = tracer.nextSpan().name("Order span").start();
+        try (var ignored = tracer.withSpanInScope(span.start())) {
+            log.debug("Span with id {} has been sent", span.context().spanId());
+        } finally {
+            span.finish();
         }
     }
 
