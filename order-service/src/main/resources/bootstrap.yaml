@@ -15,7 +15,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_URL:http://eureka:8761/eureka}
 
 management:
   endpoints:
@@ -31,5 +31,6 @@ management:
       enabled: true
     health:
       show-details: always
-server:
-  port: 8082
+
+logging:
+  host: logstash:5046

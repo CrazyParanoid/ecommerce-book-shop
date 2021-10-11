@@ -8,6 +8,8 @@ import com.max.tech.ordering.domain.item.OrderItemId;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
@@ -19,9 +21,12 @@ import java.util.Set;
 
 @Getter
 @Entity
+@DynamicInsert
+@DynamicUpdate
 @Table(name = "orders")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NamedEntityGraph(name = "order-graph", attributeNodes = {@NamedAttributeNode("items")})
 public class Order extends AggregateRoot {
     @Transient
     private static final Amount DISCOUNT_THRESHOLD = Amount.fromValue(BigDecimal.valueOf(15000));

@@ -7,67 +7,63 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import javax.annotation.PostConstruct;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class MetricsCollector {
     private final MeterRegistry meterRegistry;
+    private final OrderRepository orderRepository;
 
-    public MetricsCollector(MeterRegistry meterRegistry) {
+    private final AtomicInteger pendingPaymentsOrderCounter = new AtomicInteger(0);
+    private final AtomicInteger pendingCourierAssigmentOrderCounter = new AtomicInteger(0);
+    private final AtomicInteger pendingForDeliveringOrderCounter = new AtomicInteger(0);
+
+    private static final String PENDING_PAYMENT_ORDERS = "pending_payment_orders";
+    private static final String PENDING_COURIER_ASSIGMENT_ORDERS = "pending_courier_assigment_orders";
+    private static final String PENDING_FOR_DELIVERING_ORDERS = "pending_for_delivering_orders";
+
+    public MetricsCollector(MeterRegistry meterRegistry, OrderRepository orderRepository) {
         this.meterRegistry = meterRegistry;
+        this.orderRepository = orderRepository;
     }
 
     @PostConstruct
     public void init() {
-        meterRegistry.counter("orders", "status", "pending_payment");
-        meterRegistry.counter("orders", "status", "pending_courier_assigment");
-        meterRegistry.counter("orders", "status", "pending_for_delivering");
+        initGauge(pendingPaymentsOrderCounter, PENDING_PAYMENT_ORDERS, Order.Status.PENDING_PAYMENT);
+        initGauge(pendingCourierAssigmentOrderCounter, PENDING_COURIER_ASSIGMENT_ORDERS, Order.Status.PENDING_COURIER_ASSIGMENT);
+        initGauge(pendingForDeliveringOrderCounter, PENDING_FOR_DELIVERING_ORDERS, Order.Status.PENDING_FOR_DELIVERING);
+    }
+
+    private void initGauge(AtomicInteger orderCounter, String name, Order.Status status) {
+        var orders = orderRepository.findOrdersByStatus(status);
+        orderCounter.set(orders.size());
+        meterRegistry.gauge(name, orderCounter);
     }
 
     @Async
     @TransactionalEventListener(classes = OrderPlaced.class)
     public void onOrderPlacedDomainEvent() {
-        var pendingPaymentOrdersCounter = meterRegistry.get("orders")
-                .tags("status", "pending_payment")
-                .counter();
-        pendingPaymentOrdersCounter.increment();
+        pendingPaymentsOrderCounter.incrementAndGet();
     }
 
     @Async
     @TransactionalEventListener(classes = OrderCourierAssigned.class)
     public void onOrderCourierAssignedDomainEvent() {
-        var pendingCourierAssigmentCounter = meterRegistry.get("orders")
-                .tags("status", "pending_courier_assigment")
-                .counter();
-        var pendingForDeliveryCounter = meterRegistry.get("orders")
-                .tags("status", "pending_for_delivery")
-                .counter();
-
-        pendingCourierAssigmentCounter.increment(-1);
-        pendingForDeliveryCounter.increment();
+        pendingCourierAssigmentOrderCounter.decrementAndGet();
+        pendingForDeliveringOrderCounter.incrementAndGet();
     }
 
     @Async
     @TransactionalEventListener(classes = OrderPaid.class)
-    public void onOrderPaidDomainEvent(){
-        var pendingCourierAssigmentCounter = meterRegistry.get("orders")
-                .tags("status", "pending_courier_assigment")
-                .counter();
-        var pendingPaymentOrdersCounter = meterRegistry.get("orders")
-                .tags("status", "pending_payment")
-                .counter();
-
-        pendingCourierAssigmentCounter.increment();
-        pendingPaymentOrdersCounter.increment(-1);
+    public void onOrderPaidDomainEvent() {
+        pendingCourierAssigmentOrderCounter.incrementAndGet();
+        pendingPaymentsOrderCounter.decrementAndGet();
     }
 
     @Async
     @TransactionalEventListener(classes = OrderDelivered.class)
     public void onOrderDeliveredDomainEvent() {
-        var pendingForDeliveryCounter = meterRegistry.get("orders")
-                .tags("status", "pending_for_delivery")
-                .counter();
-
-        pendingForDeliveryCounter.increment(-1);
+        pendingForDeliveringOrderCounter.decrementAndGet();
     }
 
 }

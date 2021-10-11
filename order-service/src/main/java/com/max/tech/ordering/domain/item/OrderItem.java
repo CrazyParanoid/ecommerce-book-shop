@@ -4,12 +4,18 @@ import com.max.tech.ordering.domain.Amount;
 import com.max.tech.ordering.domain.Order;
 import com.max.tech.ordering.domain.common.Entity;
 import com.max.tech.ordering.domain.common.IdentifiedDomainObject;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.Objects;
 
+@DynamicInsert
+@DynamicUpdate
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "items")
@@ -71,15 +77,16 @@ public class OrderItem extends IdentifiedDomainObject implements Entity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass())
+        if (!(o instanceof OrderItem orderItem))
             return false;
-        OrderItem orderItem = (OrderItem) o;
-        return Objects.equals(itemId, orderItem.itemId);
+
+        return itemId != null &&
+                itemId.equals(orderItem.itemId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(itemId);
+        return getClass().hashCode();
     }
 
 }

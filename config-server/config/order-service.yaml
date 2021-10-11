@@ -25,7 +25,7 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: http://192.168.99.100:8080/auth/realms/test/protocol/openid-connect/certs
-          issuer-uri: http://192.168.99.100.100:8080/auth/realms/test
+          issuer-uri: http://192.168.99.100:8080/auth/realms/test
 events:
   delay: 4000
 
