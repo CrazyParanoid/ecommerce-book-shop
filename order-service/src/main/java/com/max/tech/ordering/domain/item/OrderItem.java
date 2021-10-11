@@ -13,6 +13,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @DynamicInsert
 @DynamicUpdate
@@ -76,12 +77,15 @@ public class OrderItem extends IdentifiedDomainObject implements Entity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof OrderItem orderItem))
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        if (!super.equals(o))
             return false;
 
-        return itemId != null &&
-                itemId.equals(orderItem.itemId);
+        OrderItem orderItem = (OrderItem) o;
+        return Objects.equals(itemId, orderItem.itemId);
     }
 
     @Override
