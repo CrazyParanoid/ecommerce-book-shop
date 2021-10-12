@@ -95,7 +95,7 @@ public class Order extends AggregateRoot {
         item.validate();
 
         this.items.add(item);
-        calculateTotalPrice();
+        this.totalPrice = calculateTotalPrice();
 
         raiseDomainEvent(new OrderItemAdded(
                 this.orderId,
@@ -106,7 +106,7 @@ public class Order extends AggregateRoot {
 
     private void updateExistedOrderItem(OrderItem item, Integer quantity) {
         item.update(quantity);
-        calculateTotalPrice();
+        this.totalPrice = calculateTotalPrice();
 
         raiseDomainEvent(
                 new OrderItemUpdated(
@@ -118,18 +118,20 @@ public class Order extends AggregateRoot {
         );
     }
 
-    private void calculateTotalPrice() {
-        var totalPriceWithoutDiscount = this.items.stream()
+    private Amount calculateTotalPrice() {
+        var totalPrice = this.items.stream()
                 .map(OrderItem::totalPrice)
                 .reduce(Amount::add)
                 .orElseThrow(() -> new IllegalStateException("Impossible to reduce total price. " +
                         "Total price without discount can't be empty"));
 
-        if (totalPriceWithoutDiscount.greaterOrEquals(DISCOUNT_THRESHOLD)) {
-            var discountValue = totalPriceWithoutDiscount.multiply(DISCOUNT_PERCENTAGE / 100);
-            this.totalPrice = totalPriceWithoutDiscount.subtract(discountValue);
-        } else
-            this.totalPrice = totalPriceWithoutDiscount;
+        //Calculate discount
+        if (totalPrice.greaterOrEquals(DISCOUNT_THRESHOLD)) {
+            var discountValue = totalPrice.multiply(DISCOUNT_PERCENTAGE / 100);
+            totalPrice =  totalPrice.subtract(discountValue);
+        }
+
+        return totalPrice;
     }
 
     public void removeItem(OrderItemId itemId) {
@@ -145,7 +147,7 @@ public class Order extends AggregateRoot {
         var item = findItemById(itemId);
 
         this.items.remove(item);
-        calculateTotalPrice();
+        this.totalPrice = calculateTotalPrice();
 
         raiseDomainEvent(new OrderItemRemoved(this.orderId, itemId, this.totalPrice));
     }
