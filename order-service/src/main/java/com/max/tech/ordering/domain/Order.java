@@ -127,7 +127,7 @@ public class Order extends AggregateRoot {
 
         //Calculate discount
         if (totalPrice.greaterOrEquals(DISCOUNT_THRESHOLD))
-            totalPrice =  totalPrice.percentage(DISCOUNT_PERCENTAGE);
+            totalPrice =  totalPrice.reduceByPercentage(DISCOUNT_PERCENTAGE);
 
         return totalPrice;
     }

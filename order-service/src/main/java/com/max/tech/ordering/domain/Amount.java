@@ -28,7 +28,7 @@ public class Amount implements ValueObject, Comparable<Amount> {
         return Amount.fromValue(this.value.multiply(BigDecimal.valueOf(value)));
     }
 
-    public Amount percentage(Double value) {
+    public Amount reduceByPercentage(Double value) {
         if (value > 100)
             throw new IllegalArgumentException(String.format("Can't calculate percentage, " +
                     "value %f can't be greater than 100", value));
