@@ -126,10 +126,8 @@ public class Order extends AggregateRoot {
                         "Total price without discount can't be empty"));
 
         //Calculate discount
-        if (totalPrice.greaterOrEquals(DISCOUNT_THRESHOLD)) {
-            var discountValue = totalPrice.multiply(DISCOUNT_PERCENTAGE / 100);
-            totalPrice =  totalPrice.subtract(discountValue);
-        }
+        if (totalPrice.greaterOrEquals(DISCOUNT_THRESHOLD))
+            totalPrice =  totalPrice.percentage(DISCOUNT_PERCENTAGE);
 
         return totalPrice;
     }

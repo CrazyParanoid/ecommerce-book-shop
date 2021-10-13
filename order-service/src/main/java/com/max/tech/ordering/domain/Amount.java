@@ -28,7 +28,15 @@ public class Amount implements ValueObject, Comparable<Amount> {
         return Amount.fromValue(this.value.multiply(BigDecimal.valueOf(value)));
     }
 
-    public Amount subtract(Amount amount) {
+    public Amount percentage(Double value) {
+        if (value > 100)
+            throw new IllegalArgumentException(String.format("Can't calculate percentage, " +
+                    "value %f can't be greater than 100", value));
+        var amount = this.multiply(value / 100);
+        return this.subtract(amount);
+    }
+
+    private Amount subtract(Amount amount) {
         if (amount.value.signum() == -1)
             throw new IllegalArgumentException(String.format("Can't perform subtraction operation," +
                     " value %s must be positive", amount));
